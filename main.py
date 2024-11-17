@@ -1,16 +1,37 @@
-# This is a sample Python script.
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, relationship
+import os
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+Base = declarative_base()
+
+engine = create_engine(os.getenv('DATABASE_URL'))
+Session = sessionmaker(bind=engine)
+session = Session()
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+class Item(Base):
+    __tablename__ = 'items'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, unique=True, nullable=False)
+    price = Column(Float, nullable=False)
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+class CartItem(Base):
+    __tablename__ = 'cart_items'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, nullable=False)
+    item_id = Column(Integer, ForeignKey('items.id'), nullable=False)
+    quantity = Column(Integer, default=1)
+    item = relationship("Item")
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+Base.metadata.create_all(engine)
+
+# Создаем новый товар
+new_item = Item(name="Sample Item", price=19.99)
+session.add(new_item)
+session.commit()
+c
+item = session.query(Item).filter_by(name="Sample Item").first()
+print(item.name, item.price)
