@@ -4,17 +4,17 @@ from sqlalchemy.orm import relationship, declarative_base
 Base = declarative_base()
 
 
-class Item(Base):
-    __tablename__ = 'items'
+class Product(Base):
+    __tablename__ = 'products'
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True, nullable=False)
     price = Column(Float, nullable=False)
 
 
-class CartItem(Base):
-    __tablename__ = 'cart_items'
+class CartProduct(Base):
+    __tablename__ = 'cart_products'
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, nullable=False)
-    item_id = Column(Integer, ForeignKey('items.id'), nullable=False)
+    product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
     quantity = Column(Integer, default=1)
-    item = relationship("Item")
+    item = relationship("Product")
