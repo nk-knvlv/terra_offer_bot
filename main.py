@@ -82,7 +82,7 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text='+',
                 callback_data=f"add_to_cart_{product.id}"  # Присоединяем id блюда к callback_data
             )
-            keyboard.append([button])
+            keyboard.append([product_name_button, button])
 
         reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -94,13 +94,15 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.callback_query.edit_message_text("Каталог пуст.")
 
 
-async def add_to_cart(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def add_to_cart():
     session = get_session()
-    product_name = update.message.text.strip()
+    # product_name = update.message.text.strip()
+    product_name = ?
 
     product = get_product_by_name(session, product_name)
     if product:
-        user_id = update.message.chat_id
+        # user_id = update.message.chat_id
+        user_id = ?
         product_id = product.id
         cart_product = get_cart_product(session, user_id, product_id)
         if cart_product:
@@ -211,8 +213,8 @@ async def button_handler(update: Update, context: CallbackContext):
     if 'get_product_info' in query.data:
         await query.edit_message_text(text="Тут инфо про продукт")
 
-    # if 'add_to_cart' in query.data:
-
+    if 'add_to_cart' in query.data:
+        add_to_cart()
 
 def main():
     app = Application.builder().token(TELEGRAM_TOKEN).build()
