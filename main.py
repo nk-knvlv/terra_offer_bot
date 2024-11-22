@@ -2,11 +2,15 @@ from telegram import (
     Update,
     LabeledPrice,
     InlineKeyboardMarkup,
-    InlineKeyboardButton
+    InlineKeyboardButton,
+    ReplyKeyboardMarkup,
+    KeyboardButton
+
 )
 from telegram.ext import (
     Application,
     CommandHandler,
+    ConversationHandler,
     MessageHandler,
     filters,
     PreCheckoutQueryHandler,
@@ -19,12 +23,11 @@ from db import (
     prepare,
     get_session,
     get_all_products,
-    get_product_by_name,
     get_cart_product,
     add_cart_product,
     get_all_cart_products,
     clear_cart,
-    first_fill_in
+    first_fill_in, get_product_by_id
 )
 import os
 
@@ -34,6 +37,8 @@ TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 PAYMENT_PROVIDER_TOKEN = os.getenv('PAYMENT_PROVIDER_TOKEN')
 DATABASE_URL = os.getenv('DATABASE_URL')
 YOUR_ADMIN_CHAT_ID = os.getenv('YOUR_ADMIN_CHAT_ID')
+# Шаги оформления заказа
+PHONE, ADDRESS, COMMENT = range(3)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -41,9 +46,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     restaurant_link = 'https://yandex.ru/maps/org/terra/135054299656/?ll=37.510259%2C55.743335&z=16'
     link_button = InlineKeyboardButton("Наш ресторан", url=restaurant_link)
     menu_button = InlineKeyboardButton("Меню", callback_data='menu')
+    offer_button = InlineKeyboardButton("Мои заказы", callback_data='offers')
+    contacts_button = InlineKeyboardButton("Контакты", callback_data='contacts')
+    reviews_button = InlineKeyboardButton("Отзывы", callback_data='reviews')
 
     keyboard = [
-        [link_button, menu_button],
+        [link_button],
+        [menu_button],
+        [offer_button],
+        [contacts_button],
+        [reviews_button]
     ]
 
     markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
@@ -67,9 +79,11 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    user_id = query.from_user.id
     session = get_session()
     products = get_all_products(session)
-
+    cart_products = get_all_cart_products(session, user_id=user_id)
     if products:
         # Создаем инлайн-клавиатуру
         keyboard = []
@@ -78,11 +92,22 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text=product.name,
                 callback_data=f"get_product_info_{product.id}"  # Присоединяем id блюда к callback_data
             )
-            button = InlineKeyboardButton(
-                text='+',
+            add_button_text = '➕'
+            cart_product = get_cart_product(session, user_id, product.id)
+
+            if cart_product and cart_product.quantity:
+                add_button_text += f' ({cart_product.quantity})'
+            add_button = InlineKeyboardButton(
+                text=add_button_text,
                 callback_data=f"add_to_cart_{product.id}"  # Присоединяем id блюда к callback_data
             )
-            keyboard.append([product_name_button, button])
+            keyboard.append([product_name_button, add_button])
+
+        cart_button = InlineKeyboardButton(
+            text='Корзина',
+            callback_data=f"cart"
+        )
+        keyboard.append([cart_button])
 
         reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -94,35 +119,33 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.callback_query.edit_message_text("Каталог пуст.")
 
 
-async def add_to_cart():
+async def add_to_cart(product_id, user_id):
     session = get_session()
-    # product_name = update.message.text.strip()
-    product_name = ?
 
-    product = get_product_by_name(session, product_name)
+    product = get_product_by_id(session, product_id)
     if product:
         # user_id = update.message.chat_id
-        user_id = ?
         product_id = product.id
         cart_product = get_cart_product(session, user_id, product_id)
         if cart_product:
             cart_product.quantity += 1
+            session.commit()
         else:
             add_cart_product(session, user_id, product_id, quantity=1)
-        await update.message.reply_text(f'Товар {product_name} добавлен в корзину.')
-    else:
-        await update.message.reply_text("Товар не найден. Пожалуйста, введите корректное название товара.")
 
 
 async def view_cart(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    menu_button = InlineKeyboardButton("Меню", callback_data='menu')
+    confirm_button = InlineKeyboardButton("Подтвердить заказ", callback_data='confirm_order')
     keyboard = [
         [
-            InlineKeyboardButton("Подтвердить заказ", callback_data='order_confirmation')
+            menu_button,
+            confirm_button
         ]
     ]
-
+    query = update.callback_query
     session = get_session()
-    user_id = update.message.chat_id
+    user_id = query.from_user.id
     cart_products = get_all_cart_products(session, user_id)
     if cart_products:
         message = "Ваша корзина:\n"
@@ -132,12 +155,12 @@ async def view_cart(update: Update, context: ContextTypes.DEFAULT_TYPE):
             message += f"{cart_product.product.name} - {cart_product.quantity} шт. - {product_total:.2f} RUB\n"
             total += product_total
         message += f"\nИтого: {total:.2f} RUB"
-        message += "\nВведите /checkout для оформления заказа."
     else:
         message = "Ваша корзина пуста."
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(message, reply_markup=reply_markup)
+    await update.callback_query.answer()  # Подтверждаем нажатие кнопки
+    await update.callback_query.edit_message_text(message, reply_markup=reply_markup)
 
 
 async def checkout(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -196,27 +219,86 @@ async def button_handler(update: Update, context: CallbackContext):
     await query.answer()  # Обязательно отвечаем на запрос
 
     if query.data == 'menu':
-        # Здесь вызовите ту же логику, что и при обработке команды /menu
         await menu(update, context)
 
+    if query.data == 'cart':
+        await view_cart(update, context)
+
     if query.data == 'confirm_order':
-        # Здесь вы можете обрабатывать заказ
-        user_id = query.from_user.id
-        order_details = "Детали заказа"  # Замените на ваши данные о заказе
-
-        # Отправляем уведомление
-        await context.bot.send_message(chat_id=YOUR_ADMIN_CHAT_ID,
-                                       text=f"Пользователь {user_id} подтвердил заказ:\n{order_details}")
-
-        await query.edit_message_text(text="Ваш заказ подтверждён! Спасибо!")
+        await update.callback_query.edit_message_text(
+            text="Добро пожаловать в службу доставки! Для начала введите свой номер телефона:"
+        )
+        return PHONE
 
     if 'get_product_info' in query.data:
         await query.edit_message_text(text="Тут инфо про продукт")
 
     if 'add_to_cart' in query.data:
-        add_to_cart()
+        product_id = query.data.split('_')[3]
+        user_id = query.from_user.id
+        await add_to_cart(product_id=product_id, user_id=user_id)
+        await menu(update, context)
+
+
+# def callback_confirm_order(update: Update, context: CallbackContext):
+
+
+async def callback_cancel_confirm_order(update: Update, context: CallbackContext):
+    await update.message.reply_text("Заказ отменен. Используйте /start для повторного запуска.")
+    return ConversationHandler.END
+
+
+def phone_handler(update: Update, context: CallbackContext):
+    user_phone = update.message.contact.phone_number
+    context.user_data['phone'] = user_phone  # Сохраняем номер телефона
+    update.message.reply_text(f"Ваш номер телефона: {user_phone}. Теперь, введите ваш адрес:")
+    return ADDRESS
+
+
+def address_handler(update: Update, context: CallbackContext):
+    user_address = update.message.text
+    context.user_data['address'] = user_address  # Сохраняем адрес
+    update.message.reply_text(f"Ваш адрес: {user_address}. Пожалуйста, введите комментарий к заказу:")
+    return COMMENT
+
+
+async def comment_handler(update: Update, context: CallbackContext):
+    query = update.callback_query
+    user_comment = update.message.text
+    context.user_data['comment'] = user_comment  # Сохраняем комментарий
+    # Здесь вы можете обрабатывать заказ
+    user_id = query.from_user.id
+    order_details = "Детали заказа"  # Замените на ваши данные о заказе
+
+    # Отправляем сообщение о проверке заказа
+    await update.message.reply_text(
+        "Ваш заказ проходит проверку. Вы можете вернуться в меню.",
+        reply_markup=ReplyKeyboardMarkup(
+            [['Главное меню', 'Меню']],
+            one_time_keyboard=True,
+            resize_keyboard=True,
+        )
+    )
+
+    # Отправляем уведомление
+    await context.bot.send_message(chat_id=YOUR_ADMIN_CHAT_ID,
+                                   text=f"Пользователь {user_id} подтвердил заказ:\n{order_details}")
+
+    return ConversationHandler.END
+
 
 def main():
+    conv_handler = ConversationHandler(
+        entry_points=[CallbackQueryHandler(button_handler)],
+        states={
+            PHONE: [MessageHandler(filters.CONTACT, phone_handler)],
+            ADDRESS: [MessageHandler(filters.TEXT & ~filters.COMMAND, address_handler)],
+            COMMENT: [MessageHandler(filters.TEXT & ~filters.COMMAND, comment_handler)],
+        },
+        fallbacks=[CallbackQueryHandler(callback_cancel_confirm_order, pattern='^cancel_confirm_order$')],
+        per_message=False
+    )
+
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     # Добавляем обработчики команд
     app.add_handler(CommandHandler("start", start))
@@ -227,11 +309,12 @@ def main():
     app.add_handler(PreCheckoutQueryHandler(precheckout_callback))
     app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_callback))
     app.add_handler(CallbackQueryHandler(button_handler))
+    app.add_handler(conv_handler)
     # app.add_handler(CallbackQueryHandler(button_callback))
     # Запуск бота
     app.run_polling()
 
 
 if __name__ == '__main__':
-    session = prepare()
+    prepare()
 main()
