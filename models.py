@@ -17,6 +17,15 @@ class Product(Base):
         return f"<Product(id={self.id}, name='{self.name}', price={self.price})>"
 
 
+class Offer(Base):
+    __tablename__ = 'offers'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, unique=True, nullable=False)
+
+    def __repr__(self):
+        return f"<Offer(id={self.id}, user_id={self.name})>"
+
+
 class CartProduct(Base):
     __tablename__ = 'cart_products'
     id = Column(Integer, primary_key=True)

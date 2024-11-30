@@ -36,31 +36,48 @@ load_dotenv()
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 PAYMENT_PROVIDER_TOKEN = os.getenv('PAYMENT_PROVIDER_TOKEN')
 DATABASE_URL = os.getenv('DATABASE_URL')
-YOUR_ADMIN_CHAT_ID = os.getenv('YOUR_ADMIN_CHAT_ID')
+ADMIN_CHAT_ID = int(os.getenv('ADMIN_CHAT_ID'))
 # Шаги оформления заказа
 PHONE, ADDRESS, COMMENT = range(3)
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(update.message.chat_id)
-    restaurant_link = 'https://yandex.ru/maps/org/terra/135054299656/?ll=37.510259%2C55.743335&z=16'
-    link_button = InlineKeyboardButton("Наш ресторан", url=restaurant_link)
-    menu_button = InlineKeyboardButton("Меню", callback_data='button_menu')
-    offer_button = InlineKeyboardButton("Мои заказы", callback_data='button_offers')
-    contacts_button = InlineKeyboardButton("Контакты", callback_data='button_contacts')
-    reviews_button = InlineKeyboardButton("Отзывы", callback_data='button_reviews')
+    user_id = update.message.chat_id
 
-    keyboard = [
-        [link_button],
-        [menu_button],
-        [offer_button],
-        [contacts_button],
-        [reviews_button]
-    ]
+    if user_id == ADMIN_CHAT_ID:
+        message = 'Администрирование.'
+        settings_button = InlineKeyboardButton("Настройки", callback_data='settings_button')
+        offers_button = InlineKeyboardButton("Заказы", callback_data='settings_button')
+        reviews_button = InlineKeyboardButton("Отзывы", callback_data='reviews_button')
+
+        keyboard = [
+            [settings_button],
+            [offers_button],
+            [reviews_button],
+        ]
+
+    else:
+        message = "Добро пожаловать!"
+
+        restaurant_link = 'https://yandex.ru/maps/org/terra/135054299656/?ll=37.510259%2C55.743335&z=16'
+        link_button = InlineKeyboardButton("Наш ресторан", url=restaurant_link)
+        menu_button = InlineKeyboardButton("Меню", callback_data='button_menu')
+        offer_button = InlineKeyboardButton("Мои заказы", callback_data='button_offers')
+        contacts_button = InlineKeyboardButton("Контакты", callback_data='button_contacts')
+        reviews_button = InlineKeyboardButton("Отзывы", callback_data='button_reviews')
+
+        keyboard = [
+            [link_button],
+            [menu_button],
+            [offer_button],
+            [contacts_button],
+            [reviews_button]
+        ]
 
     markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
     await update.message.reply_text(
-        "Добро пожаловать! ",
+        message,
         reply_markup=markup
     )
 
@@ -224,6 +241,13 @@ async def start_confirm_order_conversation_handler(update: Update, context: Cont
         return PHONE
 
 
+async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message.text == "Начало":
+        await start(update, context)  # Повторное выполнение функции start
+    elif update.message.text == "Меню":
+        await menu(update, context)
+
+
 async def button_handler(update: Update, context: CallbackContext):
     query_str = update.callback_query.data
     callback = query_str.replace('button_', '')
@@ -265,26 +289,40 @@ async def address_handler(update: Update, context: CallbackContext):
 
 
 async def comment_handler(update: Update, context: CallbackContext):
-    query = update.callback_query
     user_comment = update.message.text
     context.user_data['comment'] = user_comment  # Сохраняем комментарий
     # Здесь вы можете обрабатывать заказ
     user_id = update.message.chat_id
-    order_details = "Детали заказа"  # Замените на ваши данные о заказе
+    order_details = {
+        'Контакт': context.user_data['phone'],
+        'Адрес': context.user_data['address'],
+        'Коммент': user_comment,
+    }  # Замените на ваши данные о заказе
+
+    # Создаем строку в формате "Ключ: Значение"
+    order_string = "\n".join(f"{key.capitalize()}: {value}" for key, value in order_details.items())
+
+    start_button = InlineKeyboardButton('Главное меню', callback_data='button_start')
+    menu_button = InlineKeyboardButton('Меню', callback_data='button_menu')
+    user_offers_button = InlineKeyboardButton('Мои заказы', callback_data='button_offers')
 
     # Отправляем сообщение о проверке заказа
     await update.message.reply_text(
         "Ваш заказ проходит проверку. Вы можете вернуться в меню.",
-        reply_markup=ReplyKeyboardMarkup(
-            [['Главное меню', 'Меню']],
-            one_time_keyboard=True,
-            resize_keyboard=True,
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    start_button,
+                    menu_button,
+                    user_offers_button
+                ]
+            ],
         )
     )
 
     # Отправляем уведомление
-    await context.bot.send_message(chat_id=YOUR_ADMIN_CHAT_ID,
-                                   text=f"Пользователь {user_id} подтвердил заказ:\n{order_details}")
+    await context.bot.send_message(chat_id=ADMIN_CHAT_ID,
+                                   text=f"Пользователь {user_id} подтвердил заказ:\n{order_string}")
 
     return ConversationHandler.END
 
