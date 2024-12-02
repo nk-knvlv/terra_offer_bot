@@ -1,7 +1,22 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, JSON, Enum as SQLAEnum, DateTime
 from sqlalchemy.orm import relationship, declarative_base
+from enum import Enum
 
 Base = declarative_base()
+
+
+class OrderStatus(Enum):
+    PROCESSING = "В обработке"  # Заказ отправлен и находится в обработке
+    PREPARING = "Готовится"  # Заказ готовится
+    DELIVERY = "В доставке"  # Заказ доставляется
+    COMPLETED = "Завершен"  # Заказ завершен
+
+
+class OrderFieldsLang(Enum):
+    phone = "номер"  # Заказ отправлен и находится в обработке
+    comment = "комментарий"  # Заказ готовится
+    address = "адрес"  # Заказ доставляется
+    status = "статус"  # Заказ завершен
 
 
 class Product(Base):
@@ -10,26 +25,32 @@ class Product(Base):
     name = Column(String, unique=True, nullable=False)
     price = Column(Float, nullable=False)
     category_id = Column(Integer, ForeignKey('categories.id'), nullable=False)
-
+    description = Column(String)
     category = relationship("Category", back_populates="products")
 
     def __repr__(self):
         return f"<Product(id={self.id}, name='{self.name}', price={self.price})>"
 
 
-class Offer(Base):
-    __tablename__ = 'offers'
+class Order(Base):
+    __tablename__ = 'orders'
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, unique=True, nullable=False)
+    username = Column(String, nullable=False)
+    date = Column(DateTime, nullable=False)  # Поле для хранения даты и времени
+    phone = Column(String, nullable=False)
+    address = Column(String, nullable=False)
+    comment = Column(String, nullable=False)
+    status = Column(SQLAEnum(OrderStatus), nullable=False)  # Используем SQLAlchemy enum
+    products = Column(JSON)
 
     def __repr__(self):
-        return f"<Offer(id={self.id}, user_id={self.name})>"
+        return f"<Order(id={self.id}, username={self.username})>"
 
 
 class CartProduct(Base):
     __tablename__ = 'cart_products'
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, nullable=False)
+    username = Column(String, nullable=False)
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
     quantity = Column(Integer, default=1)
     product = relationship("Product")

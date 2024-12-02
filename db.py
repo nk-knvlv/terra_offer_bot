@@ -1,7 +1,8 @@
 from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, text
 from sqlalchemy.orm import sessionmaker, relationship, declarative_base
-from models import Base, Product, CartProduct, Category
+from models import Base, Product, CartProduct, Category, Order, OrderStatus
 from dotenv import load_dotenv
+from datetime import datetime
 import os
 
 
@@ -38,8 +39,8 @@ def get_all_products(session):
     return session.query(Product).all()
 
 
-def get_all_cart_products(session, user_id):
-    return session.query(CartProduct).filter_by(user_id=user_id).all()
+def get_all_cart_products(session, username):
+    return session.query(CartProduct).filter_by(username=username).all()
 
 
 def get_product_by_name(session, name):
@@ -50,12 +51,12 @@ def get_product_by_id(session, product_id):
     return session.query(Product).filter_by(id=product_id).first()
 
 
-def get_cart_product(session, user_id, product_id):
-    return session.query(CartProduct).filter_by(user_id=user_id, product_id=product_id).first()
+def get_cart_product(session, username, product_id):
+    return session.query(CartProduct).filter_by(username=username, product_id=product_id).first()
 
 
-def add_cart_product(session, user_id, product_id, quantity):
-    cart_products = CartProduct(user_id=user_id, product_id=product_id, quantity=quantity)
+def add_cart_product(session, username, product_id, quantity):
+    cart_products = CartProduct(username=username, product_id=product_id, quantity=quantity)
     session.add(cart_products)
     session.commit()
 
@@ -144,3 +145,26 @@ def main_fill_in():
     product_pepperoni_pizza = Product(name="Пицца Пепперони", price=800, category=category_pizza)
 
     # session.commit()
+
+
+def add_order(session, username: str, phone: str, address: str, comment: str, json_products: str):
+    order = Order(
+        username=username,
+        phone=phone,
+        address=address,
+        comment=comment,
+        products=json_products,
+        date=datetime.now(),
+        status=OrderStatus.PROCESSING
+    )
+    session.add(order)
+    session.commit()
+    return order
+
+
+def get_user_orders(session, username):
+    return session.query(Order).filter_by(username=username).all()
+
+
+def get_all_orders(session):
+    return session.query(Order).all()
