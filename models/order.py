@@ -2,8 +2,7 @@ from sqlalchemy import Column, Integer, String, Float, ForeignKey, JSON, Enum as
 from sqlalchemy.orm import relationship, declarative_base
 from models.enums import OrderStatus
 from datetime import datetime
-
-Base = declarative_base()
+from models.base import Base
 
 
 class OrderModel(Base):

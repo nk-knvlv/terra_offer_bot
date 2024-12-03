@@ -7,14 +7,12 @@ from models.order import OrderModel
 from dotenv import load_dotenv
 import os
 
-Base = declarative_base()
-
 
 class DB:
 
     def __init__(self):
-        self.connection = self.get_connection()
         self.prepare()
+        self.connection = self.get_connection()
 
     @staticmethod
     def get_connection():
@@ -45,8 +43,9 @@ class DB:
         self.first_fill_in()
 
     def first_fill_in(self):
+        connection = self.get_connection()
         # Создаем несколько товаров при первом запуске
-        if not self.connection.query(ProductModel).first():
+        if not connection.query(ProductModel).first():
             # Создание родительских категорий
             parent_category_food = CategoryModel(name="Еда")
             parent_category_drinks = CategoryModel(name="Напитки")

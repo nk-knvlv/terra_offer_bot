@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, JSON, Enum as SQLAEnum, DateTime
 from sqlalchemy.orm import relationship, declarative_base
-
-Base = declarative_base()
+from models.base import Base
 
 
 class CartProductModel(Base):
