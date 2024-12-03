@@ -1,19 +1,20 @@
 from telegram import (
+    Update,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
+from telegram.ext import ContextTypes
 
 
 class StartView:
-    def __init__(self, update, content):
-        self.update = update
-        self.content = content
+    def __init__(self, admin_controller):
+        self.admin_controller = admin_controller
 
-    def get_start_view(self, ):
-        print(self.update.message.chat_id)
-        user_id = self.update.message.chat_id
+    async def show(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        print(update.message.chat_id)
+        user_id = update.message.chat_id
 
-        if is_admin(user_id):
+        if self.admin_controller.is_admin(user_id):
             message = 'Администрирование.'
             settings_button = InlineKeyboardButton("Настройки", callback_data='button_settings')
             orders_button = InlineKeyboardButton("Заказы", callback_data='button_orders')
@@ -48,5 +49,3 @@ class StartView:
             message,
             reply_markup=markup
         )
-
-        return start_view

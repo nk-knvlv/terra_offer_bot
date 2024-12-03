@@ -1,7 +1,9 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
-from models.product import Product
-from models.category import Category
+from models.category import CategoryModel
+from models.product import ProductModel
+from models.cart_product import CartProductModel
+from models.order import OrderModel
 from dotenv import load_dotenv
 import os
 
@@ -11,11 +13,11 @@ Base = declarative_base()
 class DB:
 
     def __init__(self):
-        self.session = self.get_session()
-        self.create_tables()
+        self.connection = self.get_connection()
+        self.prepare()
 
     @staticmethod
-    def get_session():
+    def get_connection():
         load_dotenv()
         DATABASE_URL = os.getenv('DATABASE_URL')
         engine = create_engine(DATABASE_URL)
@@ -23,13 +25,16 @@ class DB:
         session = Session()
         return session
 
-    def create_tables(self):
+    async def prepare(self):
+        await self.create_tables()
+
+    async def create_tables(self):
         load_dotenv()
         DATABASE_URL = os.getenv('DATABASE_URL')
         engine = create_engine(DATABASE_URL)
 
         # Создаем таблицы
-        Base.metadata.create_all(engine)
+        await Base.metadata.create_all(engine)
 
         # Проверка таблиц
         with engine.connect() as connection:
@@ -37,38 +42,38 @@ class DB:
             for row in result:
                 print(row)
 
-        self.first_fill_in(self.session)
+        self.first_fill_in()
 
-    def first_fill_in(self, session):
+    def first_fill_in(self):
         # Создаем несколько товаров при первом запуске
-        if not session.query(Product).first():
+        if not self.connection.query(ProductModel).first():
             # Создание родительских категорий
-            parent_category_food = Category(name="Еда")
-            parent_category_drinks = Category(name="Напитки")
+            parent_category_food = CategoryModel(name="Еда")
+            parent_category_drinks = CategoryModel(name="Напитки")
 
             # Создание подкатегорий для еды
-            category_breakfasts = Category(name="Завтраки", parent=parent_category_food)
-            category_snacks = Category(name="Закуски", parent=parent_category_food)
-            category_salads = Category(name="Салаты", parent=parent_category_food)
-            category_soups = Category(name="Супы", parent=parent_category_food)
-            category_pasta = Category(name="Паста", parent=parent_category_food)
-            category_hot_dishes = Category(name="Горячее", parent=parent_category_food)
-            category_pizza = Category(name="Пицца", parent=parent_category_food)
-            category_desserts = Category(name="Десерты", parent=parent_category_food)
-            category_additional = Category(name="Дополнительно", parent=parent_category_food)
+            category_breakfasts = CategoryModel(name="Завтраки", parent=parent_category_food)
+            category_snacks = CategoryModel(name="Закуски", parent=parent_category_food)
+            category_salads = CategoryModel(name="Салаты", parent=parent_category_food)
+            category_soups = CategoryModel(name="Супы", parent=parent_category_food)
+            category_pasta = CategoryModel(name="Паста", parent=parent_category_food)
+            category_hot_dishes = CategoryModel(name="Горячее", parent=parent_category_food)
+            category_pizza = CategoryModel(name="Пицца", parent=parent_category_food)
+            category_desserts = CategoryModel(name="Десерты", parent=parent_category_food)
+            category_additional = CategoryModel(name="Дополнительно", parent=parent_category_food)
 
             # Создание подкатегорий для напитков
-            category_tea = Category(name="Чай", parent=parent_category_drinks)
-            category_coffee = Category(name="Кофе", parent=parent_category_drinks)
-            category_fruit_tea = Category(name="Фруктовый чай", parent=parent_category_drinks)
-            category_lemonades = Category(name="Лимонады", parent=parent_category_drinks)
-            category_milkshakes = Category(name="Милкшейки", parent=parent_category_drinks)
-            category_water = Category(name="Вода", parent=parent_category_drinks)
+            category_tea = CategoryModel(name="Чай", parent=parent_category_drinks)
+            category_coffee = CategoryModel(name="Кофе", parent=parent_category_drinks)
+            category_fruit_tea = CategoryModel(name="Фруктовый чай", parent=parent_category_drinks)
+            category_lemonades = CategoryModel(name="Лимонады", parent=parent_category_drinks)
+            category_milkshakes = CategoryModel(name="Милкшейки", parent=parent_category_drinks)
+            category_water = CategoryModel(name="Вода", parent=parent_category_drinks)
 
             # Создание продуктов
-            product_fettuccine = Product(name="Феттучини Альфредо", price=700, category=category_pasta)
-            product_pepperoni_pizza = Product(name="Пицца Пепперони", price=800, category=category_pizza)
-            product_coffee_cappuccino = Product(name="Капучино", price=330, category=category_pizza)
+            product_fettuccine = ProductModel(name="Феттучини Альфредо", price=700, category=category_pasta)
+            product_pepperoni_pizza = ProductModel(name="Пицца Пепперони", price=800, category=category_pizza)
+            product_coffee_cappuccino = ProductModel(name="Капучино", price=330, category=category_pizza)
 
             # Собираем все сущности в список
             categories = [
@@ -97,23 +102,23 @@ class DB:
                 product_coffee_cappuccino
             ]
 
-            session.add_all([
+            self.connection.add_all([
                 *categories,
                 *products
             ])
-            session.commit()
-
-    def main_fill_in(self):
-        # Пример создания категорий и продуктов
-        parent_category_food = Category(name="Еда")
-        category_pasta = Category(name="Паста", parent=parent_category_food)
-        category_pizza = Category(name="Пицца", parent=parent_category_food)
-
-        parent_category_drinks = Category(name="Напитки")
-        category_coffee = Category(name="Кофе", parent=parent_category_drinks)
-        category_lemonade = Category(name="Лимонады", parent=parent_category_drinks)
-
-        product_fettuccine = Product(name="Феттучини Альфредо", price=700, category=category_pasta)
-        product_pepperoni_pizza = Product(name="Пицца Пепперони", price=800, category=category_pizza)
-
-        # session.commit()
+            self.connection.commit()
+    #
+    # def main_fill_in(self):
+    #     # Пример создания категорий и продуктов
+    #     parent_category_food = CategoryModel(name="Еда")
+    #     category_pasta = CategoryModel(name="Паста", parent=parent_category_food)
+    #     category_pizza = CategoryModel(name="Пицца", parent=parent_category_food)
+    #
+    #     parent_category_drinks = CategoryModel(name="Напитки")
+    #     category_coffee = CategoryModel(name="Кофе", parent=parent_category_drinks)
+    #     category_lemonade = CategoryModel(name="Лимонады", parent=parent_category_drinks)
+    #
+    #     product_fettuccine = ProductModel(name="Феттучини Альфредо", price=700, category=category_pasta)
+    #     product_pepperoni_pizza = ProductModel(name="Пицца Пепперони", price=800, category=category_pizza)
+    #
+    #     # session.commit()

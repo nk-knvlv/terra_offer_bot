@@ -5,15 +5,21 @@ from telegram.ext import (
     CallbackContext,
     CallbackQueryHandler
 )
+from telegram import (
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+)
+
+import json
 
 
 class ConversationController:
     PHONE, ADDRESS, COMMENT = range(3)
 
-    def __init__(self, update, context, db):
-        self.update = update
-        self.context = context
+    def __init__(self, db, order_model, admin_controller):
         self.db = db
+        self.order_model = order_model
+        self.admin_controller = admin_controller
 
     def get_confirm_order_conversation(self):
         # Шаги оформления заказа
@@ -31,45 +37,42 @@ class ConversationController:
 
         return confirm_order_conversation
 
-    async def callback_cancel_confirm_order(self):
-        await self.update.message.reply_text("Заказ отменен. Используйте /start для повторного запуска.")
+    @staticmethod
+    async def callback_cancel_confirm_order(update, context):
+        await update.message.reply_text("Заказ отменен. Используйте /start для повторного запуска.")
         return ConversationHandler.END
 
-    async def phone_handler(self):
-        user_phone = self.update.message.text
-        self.context.user_data['phone'] = user_phone  # Сохраняем номер телефона
-        await self.update.message.reply_text(f"Ваш номер телефона: {user_phone}. Теперь, введите ваш адрес:")
+    async def phone_handler(self, update, context):
+        user_phone = update.message.text
+        context.user_data['phone'] = user_phone  # Сохраняем номер телефона
+        await update.message.reply_text(f"Ваш номер телефона: {user_phone}. Теперь, введите ваш адрес:")
         return self.ADDRESS
 
-    async def address_handler(self):
-        user_address = self.update.message.text
-        self.context.user_data['address'] = user_address  # Сохраняем адрес
-        await self.update.message.reply_text(f"Ваш адрес: {user_address}. Пожалуйста, введите комментарий к заказу:")
+    async def address_handler(self, update, context):
+        user_address = update.message.text
+        context.user_data['address'] = user_address  # Сохраняем адрес
+        await update.message.reply_text(f"Ваш адрес: {user_address}. Пожалуйста, введите комментарий к заказу:")
         return self.COMMENT
 
-    async def comment_handler(self):
-        user_comment = self.update.message.text
-        self.context.user_data['comment'] = user_comment  # Сохраняем комментарий
+    async def comment_handler(self, update, context):
+        user_comment = update.message.text
+        context.user_data['comment'] = user_comment  # Сохраняем комментарий
         # Здесь вы можете обрабатывать заказ
-        user = self.update.message.from_user
+        user = update.message.from_user
         username = user.username
 
-        user_cart_products = get_all_cart_products(session=self.db.session, username=username)
+        user_cart_products = self.cart_controller.get_all(session=self.db.session, username=username)
         dict_cart_products = {}
         for cart_product in user_cart_products:
             dict_cart_products[cart_product.product.name] = cart_product.quantity
-        order = add_order(
-            session=session,
-            username=username,
+        order = self.order_model.add_order(
+            session=self.db,
+            user_id=user.id,
             phone=context.user_data['phone'],
             address=context.user_data['address'],
             comment=user_comment,
             json_products=json.dumps(dict_cart_products)
         )
-
-        # Создаем строку в формате "Ключ: Значение"
-        order_view = get_order_view(order, user_id=ADMIN_CHAT_ID)
-        # order_view = "\n".join(f"{key.capitalize()}: {value}" for key, value in order_details.items())
 
         start_button = InlineKeyboardButton('Главное меню', callback_data='button_start')
         menu_button = InlineKeyboardButton('Меню', callback_data='button_menu')
@@ -88,17 +91,15 @@ class ConversationController:
             )
         )
 
-        # Отправляем уведомление
-        await context.bot.send_message(chat_id=ADMIN_CHAT_ID,
-                                       text=f"Новый заказ:\n{order_view}")
+        await self.admin_controller.send_new_order_notice(order)
 
         return ConversationHandler.END
 
-    def start_confirm_order_conversation_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def start_confirm_order_conversation_handler(self, update, context):
         query = update.callback_query
         await query.answer()
         if 'confirm_order' in query.data:
             await update.callback_query.edit_message_text(
                 text="Добро пожаловать в службу доставки! Для начала введите свой номер телефона:"
             )
-            return PHONE
+            return self.PHONE

@@ -3,19 +3,20 @@ from telegram import (
     InlineKeyboardButton,
 )
 
+from controllers.product import ProductController
+from controllers.cart import CartController
+
 
 class MenuView:
-    def __init__(self, product_controller, cart_controller):
+    def __init__(self, product_controller: ProductController, cart_controller: CartController):
         self.product_controller = product_controller
         self.cart_controller = cart_controller
 
-    async def get_menu_view(update):
+    async def show(self, update, context):
+        await update.callback_query.answer()  # Подтверждаем нажатие кнопки
         query = update.callback_query
         user_id = query.from_user.id
-        username = query.from_user.usernamex
-        session = get_session()
-        products = get_all_products(session)
-        cart_products = get_all_cart_products(session, username=username)
+        products = self.product_controller.get_all()
         if products:
             # Создаем инлайн-клавиатуру
             keyboard = []
@@ -25,7 +26,7 @@ class MenuView:
                     callback_data=f"button_get_product_info_{product.id}"  # Присоединяем id блюда к callback_data
                 )
                 add_button_text = '➕'
-                cart_product = get_cart_product(session, username, product.id)
+                cart_product = self.cart_controller.get_cart_product_by_id(user_id=user_id, product_id=product.id)
 
                 if cart_product and cart_product.quantity:
                     add_button_text += f' ({cart_product.quantity})'
@@ -44,8 +45,6 @@ class MenuView:
             reply_markup = InlineKeyboardMarkup(keyboard)
 
             # Отправляем текст с клавиатурой
-            await update.callback_query.answer()  # Подтверждаем нажатие кнопки
             await update.callback_query.edit_message_text("Выберите блюдо:", reply_markup=reply_markup)
         else:
-            await update.callback_query.answer()  # Подтверждаем нажатие кнопки
             await update.callback_query.edit_message_text("Каталог пуст.")

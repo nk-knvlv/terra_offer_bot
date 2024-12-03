@@ -1,14 +1,19 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, JSON, Enum as SQLAEnum, DateTime
 from sqlalchemy.orm import relationship, declarative_base
-from enums import OrderStatus
+from models.enums import OrderStatus
 from datetime import datetime
 
 Base = declarative_base()
 
 
-class Order(Base):
+class OrderModel(Base):
+
+    def __init__(self, db):
+        self.connection = db.connection
+
     __tablename__ = 'orders'
     id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, unique=True, nullable=False)
     username = Column(String, nullable=False)
     date = Column(DateTime, nullable=False)  # Поле для хранения даты и времени
     phone = Column(String, nullable=False)
@@ -18,24 +23,15 @@ class Order(Base):
     products = Column(JSON)
 
     def __repr__(self):
-        return f"<Order(id={self.id}, username={self.username})>"
+        return f"<OrderModel(id={self.id}, username={self.username})>"
 
-    def add_order(self, username: str, phone: str, address: str, comment: str, json_products: str):
-        order = Order(
-            username=username,
-            phone=phone,
-            address=address,
-            comment=comment,
-            products=json_products,
-            date=datetime.now(),
-            status=OrderStatus.PROCESSING
-        )
-        self.db.add(order)
-        self.db.commit()
+    def add_order(self, order):
+        self.connection.add(order)
+        self.connection.commit()
         return order
 
-    def get_user_orders(self, username):
-        return self.db.query(Order).filter_by(username=username).all()
+    def get_user_orders(self, user_id):
+        return self.connection.query(OrderModel).filter_by(user_id=user_id).all()
 
-    def get_all_orders(self):
-        return self.db.query(Order).all()
+    def get_all(self):
+        return self.connection.query(OrderModel).all()

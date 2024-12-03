@@ -4,7 +4,7 @@ class HelpView:
         pass
 
     @staticmethod
-    def get_help_view():
+    async def show(update, context):
         help_view = (
             "Доступные команды:\n"
             "/start - Начать работу с ботом\n"
@@ -13,4 +13,4 @@ class HelpView:
             "/cart - Показать содержимое вашей корзины\n"
             "Просто отправьте название товара, чтобы добавить его в корзину."
         )
-        return help_view
+        await update.message.reply_text(help_view)
