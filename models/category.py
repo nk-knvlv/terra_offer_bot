@@ -4,9 +4,12 @@ from models.base import Base
 
 
 class CategoryModel(Base):
-    def __init__(self, name, parent=None):
-        self.name = name
-        self.parent = parent
+    def __init__(self, db, name=None, parent=None):
+        self.connection = db.connection
+        if name:
+            self.name = name
+        if parent:
+            self.parent = parent
 
     __tablename__ = 'categories'
 
@@ -24,3 +27,9 @@ class CategoryModel(Base):
 
     def __repr__(self):
         return f"<CategoryModel(id={self.id}, name='{self.name}', parent_id={self.parent_id})>"
+
+    def get_parent_categories(self):
+        return self.connection.query(CategoryModel).filter_by(parent_id=None).all()
+
+    def get_category_children(self, parent_category_id):
+        return self.connection.query(CategoryModel).filter_by(parent_id=parent_category_id).all()

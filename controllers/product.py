@@ -7,3 +7,7 @@ class ProductController:
 
     def get_all(self):
         return self.product_model.get_all_products()
+
+    def get_products_by_category(self, category):
+        return self.product_model.get_products_by_category(category)
+

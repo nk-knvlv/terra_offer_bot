@@ -9,12 +9,14 @@ from telegram.ext import (
 from dotenv import load_dotenv
 
 from controllers.cart import CartController
+from controllers.category import CategoryController
 from controllers.order import OrderController
 from controllers.product import ProductController
 from db import DB
 import os
 
 from models.cart import CartModel
+from models.category import CategoryModel
 from models.order import OrderModel
 
 from controllers.conversation import ConversationController
@@ -71,6 +73,7 @@ class Bot:
         cart_model = CartModel(db)
         order_model = OrderModel(db)
         product_model = ProductModel(db)
+        category_model = CategoryModel(db)
 
         # controllers
         admin_controller = AdminController(self.ADMIN_CHAT_ID)
@@ -79,11 +82,13 @@ class Bot:
         conversation_controller = ConversationController(order_controller, admin_controller, cart_controller)
         confirm_order_conversation = conversation_controller.get_confirm_order_conversation()
         product_controller = ProductController(product_model=product_model)
+        category_controller = CategoryController(category_model=category_model)
 
         # views
         start_view = StartView(admin_controller=admin_controller)
         help_view = HelpView()
-        menu_view = MenuView(product_controller=product_controller, cart_controller=cart_controller)
+        menu_view = MenuView(product_controller=product_controller, cart_controller=cart_controller,
+                             category_controller=category_controller)
         order_view = OrderView(admin_controller=admin_controller, order_controller=order_controller)
         cart_view = CartView(cart_controller)
         self.views = {
