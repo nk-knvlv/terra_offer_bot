@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
+from models.base import Base
 from models.category import CategoryModel
 from models.product import ProductModel
 from models.cart_product import CartProductModel
