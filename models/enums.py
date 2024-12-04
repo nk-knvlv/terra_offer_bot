@@ -13,3 +13,4 @@ class OrderFieldsLang(Enum):
     comment = "комментарий"  # Заказ готовится
     address = "адрес"  # Заказ доставляется
     status = "статус"  # Заказ завершен
+    username = ""  # Заказ завершен

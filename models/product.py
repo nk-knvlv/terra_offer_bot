@@ -4,14 +4,18 @@ from models.base import Base
 
 
 class ProductModel(Base):
-    def __init__(self, db):
+    def __init__(self, db, name=None, price=None, category=None):
         self.connection = db.connection
+        self.name = name
+        self.price = price
+        self.category = category
 
     __tablename__ = 'products'
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, unique=True, nullable=False)
     price = Column(Float, nullable=False)
     description = Column(String)
+    category = relationship("CategoryModel", back_populates="products")
     category_id = Column(Integer, ForeignKey('categories.id'), nullable=False)
 
     def __repr__(self):

@@ -13,12 +13,12 @@ class CartModel:
     def get_product_by_id(self, user_id, product_id):
         return self.connection.query(CartProductModel).filter_by(user_id=user_id, product_id=product_id).first()
 
-    def add_cart_product(self, user_id, product_id):
-        cart_product = self.get_product_by_id(user_id, product_id)
+    def add_cart_product(self, user, product_id):
+        cart_product = self.get_product_by_id(user.id, product_id)
         if cart_product:
             cart_product.quantity += 1
         else:
-            cart_products = CartProductModel(username=user_id, product_id=product_id, quantity=1)
+            cart_products = CartProductModel(user_id=user.id, username=user.username, product_id=product_id, quantity=1)
             self.connection.add(cart_products)
         self.connection.commit()
 

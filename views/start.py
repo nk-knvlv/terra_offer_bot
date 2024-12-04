@@ -12,9 +12,9 @@ class StartView:
 
     async def show(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         print(update.message.chat_id)
-        user_id = update.message.chat_id
+        user = update.message.from_user
 
-        if self.admin_controller.is_admin(user_id):
+        if self.admin_controller.is_admin(user):
             message = 'Администрирование.'
             settings_button = InlineKeyboardButton("Настройки", callback_data='button_settings')
             orders_button = InlineKeyboardButton("Заказы", callback_data='button_orders')

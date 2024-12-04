@@ -4,19 +4,23 @@ from models.base import Base
 
 
 class CategoryModel(Base):
+    def __init__(self, name, parent=None):
+        self.name = name
+        self.parent = parent
+
     __tablename__ = 'categories'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
-    parent_id = Column(Integer, ForeignKey('categories.id'), nullable=True)
 
+    # Связь с продуктами
+    products = relationship("ProductModel", back_populates="category")
+    parent = relationship("CategoryModel", remote_side=[id], back_populates="children")
+    parent_id = Column(Integer, ForeignKey('categories.id'), nullable=True)
     # Связь с дочерними категориями
     children = relationship("CategoryModel", back_populates="parent", cascade="all, delete-orphan")
 
     # Связь с родительской категорией
-    parent = relationship("CategoryModel", remote_side=[id], back_populates="children")
-
-    # Связь с продуктами
 
     def __repr__(self):
         return f"<CategoryModel(id={self.id}, name='{self.name}', parent_id={self.parent_id})>"

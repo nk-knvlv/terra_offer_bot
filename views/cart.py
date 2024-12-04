@@ -19,10 +19,11 @@ class CartView:
                 confirm_button
             ]
         ]
+
         query = update.callback_query
-        user_id = query.from_user.id
-        username = query.from_user.username
-        cart_products = cartget_all_cart_products(session=session, username=username)
+        user = query.from_user
+        cart_products = self.cart_controller.get_all_products(user_id=user.id)
+
         if cart_products:
             message = "Ваша корзина:\n"
             total = 0
@@ -37,7 +38,6 @@ class CartView:
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.callback_query.answer()  # Подтверждаем нажатие кнопки
         await update.callback_query.edit_message_text(message, reply_markup=reply_markup)
-
 
     async def get_all(self):
         return

@@ -9,17 +9,17 @@ from telegram import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
-
+from models.order import OrderModel
 import json
 
 
 class ConversationController:
     PHONE, ADDRESS, COMMENT = range(3)
 
-    def __init__(self, db, order_model, admin_controller):
-        self.db = db
-        self.order_model = order_model
+    def __init__(self, order_controller, admin_controller, cart_controller):
+        self.order_controller = order_controller
         self.admin_controller = admin_controller
+        self.cart_controller = cart_controller
 
     def get_confirm_order_conversation(self):
         # Шаги оформления заказа
@@ -59,15 +59,13 @@ class ConversationController:
         context.user_data['comment'] = user_comment  # Сохраняем комментарий
         # Здесь вы можете обрабатывать заказ
         user = update.message.from_user
-        username = user.username
-
-        user_cart_products = self.cart_controller.get_all(session=self.db.session, username=username)
+        user_cart_products = self.cart_controller.get_all_products(user_id=user.id)
         dict_cart_products = {}
         for cart_product in user_cart_products:
             dict_cart_products[cart_product.product.name] = cart_product.quantity
-        order = self.order_model.add_order(
-            session=self.db,
-            user_id=user.id,
+
+        self.order_controller.add(
+            user=user,
             phone=context.user_data['phone'],
             address=context.user_data['address'],
             comment=user_comment,
@@ -91,7 +89,15 @@ class ConversationController:
             )
         )
 
-        await self.admin_controller.send_new_order_notice(order)
+        order_details = {
+            'username': user,
+            'phone': context.user_data['phone'],
+            'address': context.user_data['address'],
+            'comment': user_comment,
+            'json_products': json.dumps(dict_cart_products)
+        }
+
+        await self.admin_controller.send_new_order_notice(order_details, context=context)
 
         return ConversationHandler.END
 

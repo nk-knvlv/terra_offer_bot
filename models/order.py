@@ -7,12 +7,27 @@ from models.base import Base
 
 class OrderModel(Base):
 
-    def __init__(self, db):
-        self.connection = db.connection
+    def __init__(self, db=None, user_id=None, username=None, phone=None, address=None, comment=None, products=None):
+        if db:
+            self.connection = db.connection
+        if username:
+            self.username = username
+        if phone:
+            self.phone = phone
+        if address:
+            self.address = address
+        if comment:
+            self.comment = comment
+        if products:
+            self.products = products
+        if user_id:
+            self.user_id = user_id
+        self.status = OrderStatus.PROCESSING
+        self.date = datetime.now()
 
     __tablename__ = 'orders'
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, unique=True, nullable=False)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, nullable=False)
     username = Column(String, nullable=False)
     date = Column(DateTime, nullable=False)  # Поле для хранения даты и времени
     phone = Column(String, nullable=False)
@@ -24,7 +39,7 @@ class OrderModel(Base):
     def __repr__(self):
         return f"<OrderModel(id={self.id}, username={self.username})>"
 
-    def add_order(self, order):
+    def add(self, order):
         self.connection.add(order)
         self.connection.commit()
         return order

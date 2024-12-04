@@ -9,12 +9,12 @@ class OrderView:
         self.admin_controller = admin_controller
         self.order_controller = order_controller
 
-    def get_order_view(self, order, user_id):
+    def get_order_view(self, order, user):
         order_date = f"{order.date.month:02}/{order.date.day:02} {order.date.hour:02}:{order.date.minute:02}"
         username = ''
         user_info = ''
-        if self.admin_controller.is_admin(user_id):
-            username = ' - @' + order.username
+        if self.admin_controller.is_admin(user):
+            username = user.name
             excluded_fields = ['id', 'username', 'products', '_sa_instance_state', 'date', 'status']
             user_info = '\n' + "\n".join(
                 f"{OrderFieldsLang[field].value.capitalize()}: {value}"
@@ -35,17 +35,16 @@ class OrderView:
                       f'{products_str}')
         return order_view
 
-    async def show(self, update: Update, context: ContextTypes.DEFAULT_TYPE, user_id):
-        orders = self.order_controller.get_all(user_id=user_id)
+    async def show(self, update: Update, context: ContextTypes.DEFAULT_TYPE, user):
+        orders = self.order_controller.get_all(user_id=user.id)
 
         query = update.callback_query
-        user_id = query.from_user.id
         # Формируем текст в виде таблицы с использованием HTML
         if orders:
             orders_view = f'{'Заказы'}'
 
             for order in orders:  # Пропускаем заголовок
-                order_view = self.get_order_view(order, user_id)
+                order_view = self.get_order_view(order, user)
                 orders_view += '\n\n|==========================|\n' + order_view
 
         else:
