@@ -90,7 +90,7 @@ class ConversationController:
         )
 
         order_details = {
-            'username': user,
+            'username': user.name,
             'phone': context.user_data['phone'],
             'address': context.user_data['address'],
             'comment': user_comment,

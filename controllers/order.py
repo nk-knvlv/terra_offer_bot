@@ -19,11 +19,11 @@ class OrderController:
         )
         self.order_model.add(order)
 
-    def get_all(self, user):
-        if self.admin_controller.is_admin(user=user):
+    def get_all(self, user_id):
+        if self.admin_controller.is_admin(user_id=user_id):
             orders = self.order_model.get_all()
         else:
-            orders = self.order_model.get_user_orders(user)
+            orders = self.order_model.get_user_orders(user_id)
         return orders
 
     def get_user_orders(self, user_id):

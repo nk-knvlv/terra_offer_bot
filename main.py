@@ -52,7 +52,7 @@ class Bot:
             await self.views['cart_view'].show(update, context)
 
         if callback == 'orders':
-            await self.views['order_view'].show(update=update, context=context, user_id=user.id)
+            await self.views['order_view'].show(update=update, context=context, user=user)
 
         if 'get_product_info' in callback:
             await update.callback_query.edit_message_text(text="Тут инфо про продукт")

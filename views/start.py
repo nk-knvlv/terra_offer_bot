@@ -14,7 +14,7 @@ class StartView:
         print(update.message.chat_id)
         user = update.message.from_user
 
-        if self.admin_controller.is_admin(user):
+        if self.admin_controller.is_admin(user.id):
             message = 'Администрирование.'
             settings_button = InlineKeyboardButton("Настройки", callback_data='button_settings')
             orders_button = InlineKeyboardButton("Заказы", callback_data='button_orders')

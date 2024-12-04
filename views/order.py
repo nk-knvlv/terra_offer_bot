@@ -13,16 +13,16 @@ class OrderView:
         order_date = f"{order.date.month:02}/{order.date.day:02} {order.date.hour:02}:{order.date.minute:02}"
         username = ''
         user_info = ''
-        if self.admin_controller.is_admin(user):
+        if self.admin_controller.is_admin(user.id):
             username = user.name
-            excluded_fields = ['id', 'username', 'products', '_sa_instance_state', 'date', 'status']
+            excluded_fields = ['id', 'user_id', 'username', 'products', '_sa_instance_state', 'date', 'status']
             user_info = '\n' + "\n".join(
                 f"{OrderFieldsLang[field].value.capitalize()}: {value}"
                 for field, value in order.__dict__.items()
                 if field not in excluded_fields
             )
             user_info += f'\nCтатус: {OrderStatus(order.status).value}'
-        info_str = (f'{('Заказ ' + order_date + username)}'
+        info_str = (f'{('Заказ ' + order_date + " " + username)}'
                     f'{user_info}'
                     )
         order_products = json.loads(order.products)
