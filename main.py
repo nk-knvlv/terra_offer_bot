@@ -47,14 +47,18 @@ class Bot:
         print(callback)
         await update.callback_query.answer()  # Обязательно отвечаем на запрос
 
-        if callback == 'menu':
-            await self.views['menu_view'].show(update, context)
-
         if callback == 'cart':
             await self.views['cart_view'].show(update, context)
 
         if callback == 'orders':
             await self.views['order_view'].show(update=update, context=context, user=user)
+
+        if 'menu' in callback:
+            if callback == 'menu':
+                await self.views['menu_view'].show(update, context)
+            else:
+                category_id = int(callback.split('_')[-1])
+                await self.views['menu_view'].show_category(update, context, category_id)
 
         if 'get_product_info' in callback:
             await update.callback_query.edit_message_text(text="Тут инфо про продукт")
@@ -82,7 +86,7 @@ class Bot:
         conversation_controller = ConversationController(order_controller, admin_controller, cart_controller)
         confirm_order_conversation = conversation_controller.get_confirm_order_conversation()
         product_controller = ProductController(product_model=product_model)
-        category_controller = CategoryController(category_model=category_model)
+        category_controller = CategoryController(category_model=category_model, product_model=product_model)
 
         # views
         start_view = StartView(admin_controller=admin_controller)

@@ -33,3 +33,6 @@ class CategoryModel(Base):
 
     def get_category_children(self, parent_category_id):
         return self.connection.query(CategoryModel).filter_by(parent_id=parent_category_id).all()
+
+    def get(self, category_id):
+        return self.connection.query(CategoryModel).filter_by(id=category_id).first()

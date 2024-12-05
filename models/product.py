@@ -30,5 +30,5 @@ class ProductModel(Base):
     def get_product_by_id(self, product_id):
         return self.connection.query(ProductModel).filter_by(id=product_id).first()
 
-    def get_products_by_category(self, category):
-        return self.connection.query(ProductModel).filter_by(category=category).all()
+    def get_category_products(self, category_id):
+        return self.connection.query(ProductModel).filter_by(category_id=category_id).all()
