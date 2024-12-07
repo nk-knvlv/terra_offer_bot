@@ -59,7 +59,7 @@ class ConversationController:
         context.user_data['comment'] = user_comment  # Сохраняем комментарий
         # Здесь вы можете обрабатывать заказ
         user = update.message.from_user
-        user_cart_products = self.cart_controller.get_all_products(user_id=user.id)
+        user_cart_products = self.cart_controller.get_products(user_id=user.id)
         dict_cart_products = {}
         for cart_product in user_cart_products:
             dict_cart_products[cart_product.product.name] = cart_product.quantity

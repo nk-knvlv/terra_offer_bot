@@ -23,6 +23,7 @@ from controllers.conversation import ConversationController
 from controllers.admin import AdminController
 from models.product import ProductModel
 from views.cart import CartView
+from views.contacts import ContactsView
 
 from views.help import HelpView
 from views.menu import MenuView
@@ -44,29 +45,49 @@ class Bot:
         query_str = update.callback_query.data
         callback = query_str.replace('button_', '')
         user = update.callback_query.from_user
+        print(context.user_data['navigation'])
         print(callback)
         await update.callback_query.answer()  # Обязательно отвечаем на запрос
 
-        if callback == 'cart':
-            await self.views['cart_view'].show(update, context)
+        if callback == 'back':
+            context.user_data['navigation'].pop()
+            callback = context.user_data['navigation'][1] + context.user_data['navigation'][-1]
+        if callback == 'start':
+            context.user_data['navigation'] = ['start']
+            await self.views['start_view'].show(update, context)
+        if 'cart' in callback:
+            if 'add' in callback:
+                product_id = callback.split('_')[-1]
+                await self.controllers['cart_controller'].add_product(product_id=product_id, user=user)
+                callback = context.user_data['navigation'][1] + context.user_data['navigation'][-1]
+                context.user_data['navigation'].pop()
+
+            else:
+                context.user_data['navigation'].append('cart')
+                await self.views['cart_view'].show(update, context)
 
         if callback == 'orders':
+            context.user_data['navigation'].append('orders')
             await self.views['order_view'].show(update=update, context=context, user=user)
+
+        if callback == 'contacts':
+            context.user_data['navigation'].append('contacts')
+            await self.views['contacts_view'].show(update=update, context=context)
 
         if 'menu' in callback:
             if callback == 'menu':
+                context.user_data['navigation'].append('menu')
                 await self.views['menu_view'].show(update, context)
-            else:
+            if 'category' in callback:
                 category_id = int(callback.split('_')[-1])
+                category_str = f'category_{category_id}'
+                if context.user_data['navigation'][-1] is not category_str:
+                    context.user_data['navigation'].append(category_str)
                 await self.views['menu_view'].show_category(update, context, category_id)
-
-        if 'get_product_info' in callback:
-            await update.callback_query.edit_message_text(text="Тут инфо про продукт")
-
-        if 'add_to_cart' in callback:
-            product_id = callback.split('_')[3]
-            await self.controllers['cart_controller'].add_product(product_id=product_id, user=user)
-            await self.views['menu_view'].show(update, context)
+            if 'product_info' in callback:
+                product_id = int(callback.split('_')[-1])
+                context.user_data['navigation'].append(f'product_{product_id}')
+                await update.callback_query.edit_message_text(text=f"Тут инфо про продукт {product_id}")
 
     def main(self):
         db = DB()
@@ -95,12 +116,14 @@ class Bot:
                              category_controller=category_controller)
         order_view = OrderView(admin_controller=admin_controller, order_controller=order_controller)
         cart_view = CartView(cart_controller)
+        contacts_view = ContactsView(admin_controller=admin_controller)
         self.views = {
             'start_view': start_view,
             'help_view': help_view,
             'menu_view': menu_view,
             'order_view': order_view,
-            'cart_view': cart_view
+            'cart_view': cart_view,
+            'contacts_view': contacts_view,
         }
         self.controllers = {
             'admin_controller': admin_controller,

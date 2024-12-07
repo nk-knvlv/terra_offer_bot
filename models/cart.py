@@ -25,3 +25,10 @@ class CartModel:
     def clear_cart(self, username):
         self.connection.query(CartProductModel).filter_by(username=username).delete()
         self.connection.commit()
+
+    def get_products_count(self, user_id):
+        quantity = 0
+        products = self.get_all(user_id)
+        for product in products:
+            quantity += product.quantity
+        return quantity

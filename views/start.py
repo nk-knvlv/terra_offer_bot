@@ -4,26 +4,29 @@ from telegram import (
     InlineKeyboardButton,
 )
 from telegram.ext import ContextTypes
+from views.view import View
 
 
-class StartView:
+class StartView(View):
     def __init__(self, admin_controller):
         self.admin_controller = admin_controller
 
-    async def show(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        print(update.message.chat_id)
-        user = update.message.from_user
-
+    async def show(self, update: Update, context):
+        context.user_data['navigation'] = ['start']
+        if update.message:
+            print(update.message.chat_id)
+            user = update.message.from_user
+        else:
+            query = update.callback_query
+            user = query.from_user
         if self.admin_controller.is_admin(user.id):
             message = 'Администрирование.'
             settings_button = InlineKeyboardButton("Настройки", callback_data='button_settings')
             orders_button = InlineKeyboardButton("Заказы", callback_data='button_orders')
-            reviews_button = InlineKeyboardButton("Отзывы", callback_data='button_reviews')
 
             keyboard = [
                 [settings_button],
                 [orders_button],
-                [reviews_button],
             ]
 
         else:
@@ -34,18 +37,22 @@ class StartView:
             menu_button = InlineKeyboardButton("Меню", callback_data='button_menu')
             order_button = InlineKeyboardButton("Мои заказы", callback_data='button_orders')
             contacts_button = InlineKeyboardButton("Контакты", callback_data='button_contacts')
-            reviews_button = InlineKeyboardButton("Отзывы", callback_data='button_reviews')
 
             keyboard = [
                 [link_button],
                 [menu_button],
                 [order_button],
                 [contacts_button],
-                [reviews_button]
             ]
 
         markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
-        await update.message.reply_text(
-            message,
-            reply_markup=markup
-        )
+        if update.message:
+            await update.message.reply_text(
+                message,
+                reply_markup=markup
+            )
+        else:
+            await update.callback_query.edit_message_text(
+                message,
+                reply_markup=markup
+            )

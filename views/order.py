@@ -1,10 +1,11 @@
 from models.enums import OrderFieldsLang, OrderStatus
-from telegram import Update
+from telegram import Update, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 import json
+from views.view import View
 
 
-class OrderView:
+class OrderView(View):
     def __init__(self, order_controller, admin_controller):
         self.admin_controller = admin_controller
         self.order_controller = order_controller
@@ -36,6 +37,7 @@ class OrderView:
         return order_view
 
     async def show(self, update: Update, context: ContextTypes.DEFAULT_TYPE, user):
+        keyboard = []
         orders = self.order_controller.get_all(user_id=user.id)
 
         query = update.callback_query
@@ -49,5 +51,8 @@ class OrderView:
 
         else:
             orders_view = 'Заказов нет'
+        footer = self.get_footer(update, context)
+        keyboard.append(footer)
+        reply_markup = InlineKeyboardMarkup(keyboard)
         await update.callback_query.answer()  # Подтверждаем нажатие кнопки
-        await update.callback_query.edit_message_text(orders_view)
+        await update.callback_query.edit_message_text(orders_view, reply_markup=reply_markup)

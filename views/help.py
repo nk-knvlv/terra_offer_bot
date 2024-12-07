@@ -1,10 +1,15 @@
-class HelpView:
+from telegram import InlineKeyboardMarkup
+
+from views.view import View
+
+
+class HelpView(View):
 
     def __init__(self):
         pass
 
-    @staticmethod
-    async def show(update, context):
+    async def show(self, update, context):
+        keyboard = []
         help_view = (
             "Доступные команды:\n"
             "/start - Начать работу с ботом\n"
@@ -13,4 +18,7 @@ class HelpView:
             "/cart - Показать содержимое вашей корзины\n"
             "Просто отправьте название товара, чтобы добавить его в корзину."
         )
-        await update.message.reply_text(help_view)
+        footer = self.get_footer(update, context)
+        keyboard.append(footer)
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        await update.message.reply_text(help_view, reply_markup=reply_markup)

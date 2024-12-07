@@ -4,9 +4,10 @@ from telegram import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
+from views.view import View
 
 
-class CartView:
+class CartView(View):
     def __init__(self, cart_controller):
         self.cart_controller = cart_controller
 
@@ -22,7 +23,7 @@ class CartView:
 
         query = update.callback_query
         user = query.from_user
-        cart_products = self.cart_controller.get_all_products(user_id=user.id)
+        cart_products = self.cart_controller.get_products(user_id=user.id)
 
         if cart_products:
             message = "Ваша корзина:\n"
@@ -34,7 +35,8 @@ class CartView:
             message += f"\nИтого: {total:.2f} RUB"
         else:
             message = "Ваша корзина пуста."
-
+        footer = self.get_footer(update, context)
+        keyboard.append(footer)
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.callback_query.answer()  # Подтверждаем нажатие кнопки
         await update.callback_query.edit_message_text(message, reply_markup=reply_markup)
