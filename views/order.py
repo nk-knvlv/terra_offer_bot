@@ -27,13 +27,15 @@ class OrderView(View):
                     f'{user_info}'
                     )
         order_products = json.loads(order.products)
-        products_str = '\nКорзина:\n' + "\n".join(
+        products_str = "\n".join(
             f"{product_name}: {quantity} шт"
             for product_name, quantity in order_products.items()
         )
 
         order_view = (f'\n{info_str}\n '
                       f'{products_str}')
+
+
         return order_view
 
     async def show(self, update: Update, context: ContextTypes.DEFAULT_TYPE, user):

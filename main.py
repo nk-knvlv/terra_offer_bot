@@ -55,12 +55,14 @@ class Bot:
 
         if callback == 'back':
             callback = 'start'
+            await self.controllers['product_controller'].del_photo(update, context)
             context.user_data['navigation'].pop()
             if len(context.user_data['navigation']) > 0:
                 callback = '_'.join(context.user_data['navigation'])
                 context.user_data['navigation'].pop()
         if callback == 'start':
             context.user_data['navigation'] = []
+            await self.controllers['product_controller'].del_photo(update, context)
             await self.views['start_view'].show(update, context)
 
         if 'product' in callback:
@@ -93,6 +95,7 @@ class Bot:
 
         if 'menu' in callback:
             if callback == 'menu':
+                context.user_data['navigation'] = []
                 context.user_data['navigation'].append('menu')
                 await self.views['menu_view'].show(update, context)
             if 'category' in callback:
@@ -141,7 +144,8 @@ class Bot:
         }
         self.controllers = {
             'admin_controller': admin_controller,
-            'cart_controller': cart_controller
+            'cart_controller': cart_controller,
+            'product_controller': product_controller,
         }
         # handlers
         bot.add_handler(confirm_order_conversation)

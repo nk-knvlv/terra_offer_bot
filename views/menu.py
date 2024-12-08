@@ -2,6 +2,7 @@ from telegram import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
+from telegram.error import BadRequest
 
 from controllers.product import ProductController
 from controllers.cart import CartController
@@ -71,12 +72,15 @@ class MenuView(View):
         keyboard.append(footer)
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.callback_query.answer()  # Подтверждаем нажатие кнопки
-        await update.callback_query.edit_message_text(message, reply_markup=reply_markup)
+        try:
+            await update.callback_query.edit_message_text(message, reply_markup=reply_markup)
+        except BadRequest:
+            print('одно и то же')
 
     def get_products_view(self, user, products):
         product_button_view = []
         for product in products:
             cart_product = self.cart_controller.get_cart_product_by_id(user_id=user.id, product_id=product.id)
             product_buttons = self.product_controller.get_product_buttons(product=product, cart_product=cart_product)
-            product_button_view.append(product_buttons)
+            product_button_view.append([product_buttons[0],product_buttons[2]])
         return product_button_view

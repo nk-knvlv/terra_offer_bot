@@ -24,14 +24,15 @@ class CartModel:
 
     def decrease_cart_product(self, user, product_id):
         cart_product = self.get_product_by_id(user.id, product_id)
-        if cart_product.quantity > 1:
-            cart_product.quantity -= 1
-        else:
-            self.connection.delete(cart_product)
-        self.connection.commit()
+        if cart_product:
+            if cart_product.quantity > 1:
+                cart_product.quantity -= 1
+            else:
+                self.connection.delete(cart_product)
+            self.connection.commit()
 
-    def clear_cart(self, username):
-        self.connection.query(CartProductModel).filter_by(username=username).delete()
+    def clear_cart(self, user_id):
+        self.connection.query(CartProductModel).filter_by(user_id=user_id).delete()
         self.connection.commit()
 
     def get_products_count(self, user_id):

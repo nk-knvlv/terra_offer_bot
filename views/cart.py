@@ -13,8 +13,8 @@ class CartView(View):
         self.product_controller = product_controller
 
     async def show(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        menu_button = InlineKeyboardButton("Меню", callback_data='button_menu')
-        confirm_button = InlineKeyboardButton("Подтвердить заказ", callback_data='conversation_confirm_order')
+        menu_button = InlineKeyboardButton("📜 Меню", callback_data='button_menu')
+        confirm_button = InlineKeyboardButton("✔️ Подтвердить заказ", callback_data='conversation_confirm_order')
         keyboard = [
         ]
 
@@ -27,9 +27,12 @@ class CartView(View):
             for cart_product in cart_products:
                 product = self.product_controller.get_product_by_id(cart_product.product_id)
                 product_buttons = self.product_controller.get_product_buttons(product, cart_product)
-                keyboard.append(product_buttons)
+                product_name_button = product_buttons[0]
+                keyboard.append([product_name_button])
+                products_quantity_buttons = [product_buttons[1], product_buttons[2]]
+                keyboard.append(products_quantity_buttons)
                 total += product.price * cart_product.quantity
-            message = f"Ваша корзина: {total} ₽\n"
+            message = f"Ваша корзина: {total:.0f} ₽\n"
         else:
             message = "Ваша корзина пуста."
         keyboard.append([

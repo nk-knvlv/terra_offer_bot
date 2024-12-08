@@ -15,7 +15,7 @@ class ProductController:
 
     def get_product_buttons(self, product, cart_product):
         product_name_button = InlineKeyboardButton(
-            text=f"{product.name}\n{product.price} ₽",
+            text=f"{product.name}\n{product.price:.0f} ₽",
             callback_data=f"button_product_info_{product.id}"
             # Присоединяем id блюда к callback_data
         )
@@ -46,3 +46,13 @@ class ProductController:
             callback_data=f"button_product_increase_{product_id}"  # Присоединяем id блюда к callback_data
         )
         return increase_button
+
+    @staticmethod
+    async def del_photo(update, context):
+        if 'last_photo_message_id' in context.user_data:
+            try:
+                await context.bot.delete_message(chat_id=update.effective_chat.id,
+                                                 message_id=context.user_data['last_photo_message_id'])
+                del context.user_data['last_photo_message_id']  # Удаляем ID после удаления сообщения
+            except Exception as e:
+                print("Не удалось удалить сообщение:", e)

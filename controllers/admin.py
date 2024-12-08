@@ -39,3 +39,5 @@ class AdminController:
         user = await context.bot.get_chat(self.admin_id)
         nickname = user.username if user.username else "Нет никнейма"
         return f"@{nickname}"
+
+

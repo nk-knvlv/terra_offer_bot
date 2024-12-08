@@ -8,6 +8,8 @@ from models.order import OrderModel
 from dotenv import load_dotenv
 import os
 
+from src.lang.ru import menu, food_category_names, drink_category_names
+
 
 class DB:
 
@@ -40,83 +42,63 @@ class DB:
             for row in result:
                 print(row)
 
-        self.first_fill_in()
+        self.fill_in()
 
-    def first_fill_in(self):
+    def fill_in(self):
         connection = self.get_connection()
         # Создаем несколько товаров при первом запуске
         if not connection.query(ProductModel).first():
             # Создание родительских категорий
             # Создание родительских категорий
-            parent_category_food = CategoryModel(name="Еда")
-            parent_category_drinks = CategoryModel(name="Напитки")
+            parent_category_food = CategoryModel(name="🍞 Еда")
+            parent_category_drinks = CategoryModel(name="🍷 Напитки")
 
             # Сохранение родительских категорий в базу данных
             self.connection.add_all([parent_category_food, parent_category_drinks])
             self.connection.commit()  # Теперь у родительских категорий будут id
 
             # Запрос родительских категорий из базы данных
-            parent_category_food = self.connection.query(CategoryModel).filter_by(name="Еда").first()
-            parent_category_drinks = self.connection.query(CategoryModel).filter_by(name="Напитки").first()
+            parent_category_food = self.connection.query(CategoryModel).filter_by(name="🍞 Еда").first()
+            parent_category_drinks = self.connection.query(CategoryModel).filter_by(name="🍷 Напитки").first()
 
-            # Создание подкатегорий для еды
-            category_breakfasts = CategoryModel(name="Завтраки", parent=parent_category_food)
-            category_snacks = CategoryModel(name="Закуски", parent=parent_category_food)
-            category_salads = CategoryModel(name="Салаты", parent=parent_category_food)
-            category_soups = CategoryModel(name="Супы", parent=parent_category_food)
-            category_pasta = CategoryModel(name="Паста", parent=parent_category_food)
-            category_hot_dishes = CategoryModel(name="Горячее", parent=parent_category_food)
-            category_pizza = CategoryModel(name="Пицца", parent=parent_category_food)
-            category_desserts = CategoryModel(name="Десерты", parent=parent_category_food)
-            category_additional = CategoryModel(name="Дополнительно", parent=parent_category_food)
+            food_categories = []
+            drink_categories = []
+            for name in food_category_names:
+                category = CategoryModel(name=name, parent=parent_category_food)
+                food_categories.append(category)
 
-            # Создание подкатегорий для напитков
-            category_tea = CategoryModel(name="Чай", parent=parent_category_drinks)
-            category_coffee = CategoryModel(name="Кофе", parent=parent_category_drinks)
-            category_fruit_tea = CategoryModel(name="Фруктовый чай", parent=parent_category_drinks)
-            category_lemonades = CategoryModel(name="Лимонады", parent=parent_category_drinks)
-            category_milkshakes = CategoryModel(name="Милкшейки", parent=parent_category_drinks)
-            category_water = CategoryModel(name="Вода", parent=parent_category_drinks)
-
+            for name in drink_category_names:
+                category = CategoryModel(name=name, parent=parent_category_drinks)
+                drink_categories.append(category)
             # Сохранение дочерних категорий в базу данных
             self.connection.add_all([
-                category_breakfasts,
-                category_snacks,
-                category_salads,
-                category_soups,
-                category_pasta,
-                category_hot_dishes,
-                category_pizza,
-                category_desserts,
-                category_additional,
-                category_tea,
-                category_coffee,
-                category_fruit_tea,
-                category_lemonades,
-                category_milkshakes,
-                category_water
+                *food_categories,
+                *drink_categories
             ])
             self.connection.commit()  # Теперь у дочерних категорий тоже будут id
 
             # Запрос дочерних категорий из базы данных
             categories_food = self.connection.query(CategoryModel).filter_by(parent=parent_category_food).all()
             categories_drinks = self.connection.query(CategoryModel).filter_by(parent=parent_category_drinks).all()
-            pizza_category = next(cat for cat in categories_food if cat.name == "Паста")
 
-            # Создание продуктов с использованием дочерних категорий
-            product_fettuccine = ProductModel(self, name="Феттучини Альфредо", price=700,
-                                              category=pizza_category)
-            product_pepperoni_pizza = ProductModel(self, name="Пицца Пепперони", price=800,
-                                                   category=next(cat for cat in categories_food if cat.name == "Пицца"))
-            product_coffee_cappuccino = ProductModel(self, name="Капучино", price=330, category=next(
-                cat for cat in categories_drinks if cat.name == "Кофе"))
+            product_models = []
+            all_categories = menu['Напитки'].copy()
+            all_categories.update(menu['Еда'])
+            for category_name, products in all_categories.items():
+                for product_name, product_fields in products.items():
+                    product_model = ProductModel(
+                        self,
+                        name=product_name,
+                        price=product_fields['price'],
+                        category=next(
+                            cat for cat in [*categories_food, *categories_drinks]
+                            if category_name in cat.name),
+                        description=product_fields['description'],
+                        photo_path='src/images/pizza_pepperoni.jpg')
+                    product_models.append(product_model)
 
             # Сохранение продуктов в базу данных
-            self.connection.add_all([
-                product_fettuccine,
-                product_pepperoni_pizza,
-                product_coffee_cappuccino
-            ])
+            self.connection.add_all(product_models)
             self.connection.commit()
 
     #

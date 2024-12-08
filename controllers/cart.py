@@ -32,3 +32,6 @@ class CartController:
             callback_data=f"button_cart"
         )
         return cart_button
+
+    def clear(self, user_id):
+        self.cart_model.clear_cart(user_id=user_id)
