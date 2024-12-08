@@ -28,6 +28,7 @@ from views.contacts import ContactsView
 from views.help import HelpView
 from views.menu import MenuView
 from views.order import OrderView
+from views.product import ProductView
 from views.start import StartView
 
 
@@ -45,26 +46,42 @@ class Bot:
         query_str = update.callback_query.data
         callback = query_str.replace('button_', '')
         user = update.callback_query.from_user
+        if 'navigation' not in context.user_data.keys():
+            context.user_data['navigation'] = []
+            callback = 'start'
         print(context.user_data['navigation'])
         print(callback)
         await update.callback_query.answer()  # Обязательно отвечаем на запрос
 
         if callback == 'back':
+            callback = 'start'
             context.user_data['navigation'].pop()
-            callback = context.user_data['navigation'][1] + context.user_data['navigation'][-1]
+            if len(context.user_data['navigation']) > 0:
+                callback = '_'.join(context.user_data['navigation'])
+                context.user_data['navigation'].pop()
         if callback == 'start':
-            context.user_data['navigation'] = ['start']
+            context.user_data['navigation'] = []
             await self.views['start_view'].show(update, context)
-        if 'cart' in callback:
-            if 'add' in callback:
+
+        if 'product' in callback:
+            if 'info' in callback:
+                product_id = int(callback.split('_')[-1])
+                context.user_data['navigation'].append(f'product_{product_id}')
+                await self.views['product_view'].show(update, context, product_id)
+            if 'increase' in callback:
                 product_id = callback.split('_')[-1]
                 await self.controllers['cart_controller'].add_product(product_id=product_id, user=user)
-                callback = context.user_data['navigation'][1] + context.user_data['navigation'][-1]
+                callback = context.user_data['navigation'][0] + context.user_data['navigation'][-1]
+                context.user_data['navigation'].pop()
+            elif 'decrease' in callback:
+                product_id = callback.split('_')[-1]
+                await self.controllers['cart_controller'].decrease_product(product_id=product_id, user=user)
+                callback = context.user_data['navigation'][0] + context.user_data['navigation'][-1]
                 context.user_data['navigation'].pop()
 
-            else:
-                context.user_data['navigation'].append('cart')
-                await self.views['cart_view'].show(update, context)
+        if 'cart' in callback:
+            context.user_data['navigation'].append('cart')
+            await self.views['cart_view'].show(update, context)
 
         if callback == 'orders':
             context.user_data['navigation'].append('orders')
@@ -81,17 +98,12 @@ class Bot:
             if 'category' in callback:
                 category_id = int(callback.split('_')[-1])
                 category_str = f'category_{category_id}'
-                if context.user_data['navigation'][-1] is not category_str:
-                    context.user_data['navigation'].append(category_str)
+                context.user_data['navigation'].append(category_str)
                 await self.views['menu_view'].show_category(update, context, category_id)
-            if 'product_info' in callback:
-                product_id = int(callback.split('_')[-1])
-                context.user_data['navigation'].append(f'product_{product_id}')
-                await update.callback_query.edit_message_text(text=f"Тут инфо про продукт {product_id}")
 
     def main(self):
         db = DB()
-        db.prepare()
+        # db.prepare()
         bot = Application.builder().token(self.TELEGRAM_TOKEN).build()
 
         # models
@@ -115,8 +127,9 @@ class Bot:
         menu_view = MenuView(product_controller=product_controller, cart_controller=cart_controller,
                              category_controller=category_controller)
         order_view = OrderView(admin_controller=admin_controller, order_controller=order_controller)
-        cart_view = CartView(cart_controller)
+        cart_view = CartView(cart_controller, product_controller)
         contacts_view = ContactsView(admin_controller=admin_controller)
+        product_view = ProductView(product_controller=product_controller)
         self.views = {
             'start_view': start_view,
             'help_view': help_view,
@@ -124,6 +137,7 @@ class Bot:
             'order_view': order_view,
             'cart_view': cart_view,
             'contacts_view': contacts_view,
+            'product_view': product_view,
         }
         self.controllers = {
             'admin_controller': admin_controller,

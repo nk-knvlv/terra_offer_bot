@@ -4,8 +4,9 @@ from models.base import Base
 
 
 class CategoryModel(Base):
-    def __init__(self, db, name=None, parent=None):
-        self.connection = db.connection
+    def __init__(self, db=None, name=None, parent=None):
+        if db:
+            self.connection = db.connection
         if name:
             self.name = name
         if parent:

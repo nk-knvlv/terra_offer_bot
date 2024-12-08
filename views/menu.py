@@ -58,7 +58,7 @@ class MenuView(View):
             keyboard += categories_view
 
         if products := category_inner['products']:
-            product_buttons_view = self.get_product_buttons_view(products=products, user=user)
+            product_buttons_view = self.get_products_view(products=products, user=user)
             keyboard += product_buttons_view
         parent_category = self.category_controller.get_category(category_id)
         category_name = parent_category.name
@@ -73,22 +73,10 @@ class MenuView(View):
         await update.callback_query.answer()  # Подтверждаем нажатие кнопки
         await update.callback_query.edit_message_text(message, reply_markup=reply_markup)
 
-    def get_product_buttons_view(self, user, products):
+    def get_products_view(self, user, products):
         product_button_view = []
-
         for product in products:
-            product_name_button = InlineKeyboardButton(
-                text=product.name,
-                callback_data=f"button_menu_get_product_info_{product.id}"  # Присоединяем id блюда к callback_data
-            )
-            add_button_text = '➕'
             cart_product = self.cart_controller.get_cart_product_by_id(user_id=user.id, product_id=product.id)
-
-            if cart_product and cart_product.quantity:
-                add_button_text += f' ({cart_product.quantity})'
-            add_button = InlineKeyboardButton(
-                text=add_button_text,
-                callback_data=f"button_cart_add_{product.id}"  # Присоединяем id блюда к callback_data
-            )
-            product_button_view.append([product_name_button, add_button])
+            product_buttons = self.product_controller.get_product_buttons(product=product, cart_product=cart_product)
+            product_button_view.append(product_buttons)
         return product_button_view

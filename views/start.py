@@ -12,7 +12,7 @@ class StartView(View):
         self.admin_controller = admin_controller
 
     async def show(self, update: Update, context):
-        context.user_data['navigation'] = ['start']
+        context.user_data['navigation'] = []
         if update.message:
             print(update.message.chat_id)
             user = update.message.from_user

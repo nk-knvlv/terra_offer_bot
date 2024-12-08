@@ -1,3 +1,5 @@
+from telegram import InlineKeyboardButton
+
 from models.product import ProductModel
 
 
@@ -11,3 +13,36 @@ class ProductController:
     def get_products_by_category(self, category):
         return self.product_model.get_products_by_category(category)
 
+    def get_product_buttons(self, product, cart_product):
+        product_name_button = InlineKeyboardButton(
+            text=f"{product.name}\n{product.price} ₽",
+            callback_data=f"button_product_info_{product.id}"
+            # Присоединяем id блюда к callback_data
+        )
+        increase_button = self.get_increase_button(product.id, cart_product=cart_product)
+        decrease_button = self.get_decrease_button(product.id)
+        return [product_name_button, decrease_button, increase_button]
+
+    def get_product_by_id(self, product_id):
+        return self.product_model.get_product_by_id(product_id)
+
+    @staticmethod
+    def get_decrease_button(product_id):
+        decrease_button_text = '➖'
+        decrease_button = InlineKeyboardButton(
+            text=decrease_button_text,
+            callback_data=f"button_product_decrease_{product_id}"  # Присоединяем id блюда к callback_data
+        )
+        return decrease_button
+
+    @staticmethod
+    def get_increase_button(product_id, cart_product):
+        increase_button_text = '➕'
+
+        if cart_product and cart_product.quantity:
+            increase_button_text += f' ({cart_product.quantity})'
+        increase_button = InlineKeyboardButton(
+            text=increase_button_text,
+            callback_data=f"button_product_increase_{product_id}"  # Присоединяем id блюда к callback_data
+        )
+        return increase_button

@@ -17,6 +17,7 @@ class ProductModel(Base):
     description = Column(String)
     category = relationship("CategoryModel", back_populates="products")
     category_id = Column(Integer, ForeignKey('categories.id'), nullable=False)
+    photo_path = Column(String, nullable=True)  # Строка для хранения пути к фотографии
 
     def __repr__(self):
         return f"<Product(id={self.id}, name='{self.name}', price={self.price})>"

@@ -18,10 +18,10 @@ class View:
 
     def get_footer(self, update, context):
         footer = []
-        if len(context.user_data['navigation']) > 1:
+        if len(context.user_data['navigation']) > 0:
             back_button = self.get_back_button()
             footer.append(back_button)
-        if len(context.user_data['navigation']) > 2:
+        if len(context.user_data['navigation']) > 1:
             start_button = self.get_start_button()
             footer.append(start_button)
         return footer

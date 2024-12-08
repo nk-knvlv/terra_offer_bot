@@ -8,17 +8,14 @@ from views.view import View
 
 
 class CartView(View):
-    def __init__(self, cart_controller):
+    def __init__(self, cart_controller, product_controller):
         self.cart_controller = cart_controller
+        self.product_controller = product_controller
 
     async def show(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         menu_button = InlineKeyboardButton("Меню", callback_data='button_menu')
         confirm_button = InlineKeyboardButton("Подтвердить заказ", callback_data='conversation_confirm_order')
         keyboard = [
-            [
-                menu_button,
-                confirm_button
-            ]
         ]
 
         query = update.callback_query
@@ -26,20 +23,21 @@ class CartView(View):
         cart_products = self.cart_controller.get_products(user_id=user.id)
 
         if cart_products:
-            message = "Ваша корзина:\n"
             total = 0
             for cart_product in cart_products:
-                product_total = cart_product.quantity * cart_product.product.price
-                message += f"{cart_product.product.name} - {cart_product.quantity} шт. - {product_total:.2f} RUB\n"
-                total += product_total
-            message += f"\nИтого: {total:.2f} RUB"
+                product = self.product_controller.get_product_by_id(cart_product.product_id)
+                product_buttons = self.product_controller.get_product_buttons(product, cart_product)
+                keyboard.append(product_buttons)
+                total += product.price * cart_product.quantity
+            message = f"Ваша корзина: {total} ₽\n"
         else:
             message = "Ваша корзина пуста."
+        keyboard.append([
+            menu_button,
+            confirm_button
+        ])
         footer = self.get_footer(update, context)
         keyboard.append(footer)
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.callback_query.answer()  # Подтверждаем нажатие кнопки
         await update.callback_query.edit_message_text(message, reply_markup=reply_markup)
-
-    async def get_all(self):
-        return
