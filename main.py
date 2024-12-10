@@ -48,8 +48,6 @@ class Bot:
         user = update.callback_query.from_user
         if 'navigation' not in context.user_data.keys():
             context.user_data['navigation'] = []
-            callback = 'start'
-        print(context.user_data['navigation'])
         print(callback)
         await update.callback_query.answer()  # Обязательно отвечаем на запрос
 
@@ -85,9 +83,41 @@ class Bot:
             context.user_data['navigation'].append('cart')
             await self.views['cart_view'].show(update, context)
 
-        if callback == 'orders':
-            context.user_data['navigation'].append('orders')
-            await self.views['order_view'].show(update=update, context=context, user=user)
+        if 'orders' in callback:
+            if callback == 'orders':
+                context.user_data['navigation'].append('orders')
+                await self.views['order_view'].show(update=update, context=context, user=user)
+            if 'view' in callback:
+                order_id = callback.split('_')[-1]
+                context.user_data['navigation'].append(f'order_{order_id}')
+                await self.views['order_view'].show_order_info(
+                    update=update,
+                    context=context,
+                    order_id=order_id,
+                    user=user)
+            if 'confirm' in callback:
+                order_id = callback.split('_')[-1]
+                await self.controllers['order_controller'].confirm_order(
+                    update=update,
+                    context=context,
+                    order_id=order_id)
+                await self.views['order_view'].show_order_info(
+                    update=update,
+                    context=context,
+                    order_id=order_id,
+                    user=user)
+
+            if 'cancel' in callback:
+                order_id = callback.split('_')[-1]
+                await self.controllers['order_controller'].cancel_order(
+                    update=update,
+                    context=context,
+                    order_id=order_id)
+                await self.views['order_view'].show_order_info(
+                    update=update,
+                    context=context,
+                    order_id=order_id,
+                    user=user)
 
         if callback == 'contacts':
             context.user_data['navigation'].append('contacts')
@@ -106,7 +136,7 @@ class Bot:
 
     def main(self):
         db = DB()
-        # db.prepare()
+        db.prepare()
         bot = Application.builder().token(self.TELEGRAM_TOKEN).build()
 
         # models
@@ -146,6 +176,7 @@ class Bot:
             'admin_controller': admin_controller,
             'cart_controller': cart_controller,
             'product_controller': product_controller,
+            'order_controller': order_controller
         }
         # handlers
         bot.add_handler(confirm_order_conversation)

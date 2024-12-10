@@ -1,3 +1,6 @@
+import string
+from random import choices
+
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, JSON, Enum as SQLAEnum, DateTime
 from sqlalchemy.orm import relationship, declarative_base
 from models.enums import OrderStatus
@@ -7,7 +10,16 @@ from models.base import Base
 
 class OrderModel(Base):
 
-    def __init__(self, db=None, user_id=None, username=None, phone=None, address=None, comment=None, products=None):
+    def __init__(
+            self,
+            db=None,
+            user_id=None,
+            username=None,
+            phone=None,
+            address=None,
+            comment=None,
+            products=None
+    ):
         if db:
             self.connection = db.connection
         if username:
@@ -22,6 +34,8 @@ class OrderModel(Base):
             self.products = products
         if user_id:
             self.user_id = user_id
+            self.label = self.generate_unique_label()
+
         self.status = OrderStatus.PROCESSING
         self.date = datetime.now()
 
@@ -29,6 +43,7 @@ class OrderModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, nullable=False)
     username = Column(String, nullable=False)
+    label = Column(String, nullable=False)
     date = Column(DateTime, nullable=False)  # Поле для хранения даты и времени
     phone = Column(String, nullable=False)
     address = Column(String, nullable=False)
@@ -39,13 +54,31 @@ class OrderModel(Base):
     def __repr__(self):
         return f"<OrderModel(id={self.id}, username={self.username})>"
 
-    def add(self, order):
+    async def add(self, order):
         self.connection.add(order)
         self.connection.commit()
-        return order
+        new_order = self.get_last_user_order(order.user_id)
+        return new_order
 
     def get_user_orders(self, user_id):
         return self.connection.query(OrderModel).filter_by(user_id=user_id).all()
 
+    def get_last_user_order(self, user_id):
+        return self.connection.query(OrderModel).filter_by(user_id=user_id).first()
+
     def get_all(self):
         return self.connection.query(OrderModel).all()
+
+    @staticmethod
+    def generate_unique_label():
+        letters = choices(string.ascii_uppercase, k=2)  # Выбор двух случайных букв
+        numbers = choices(string.digits, k=2)
+        return ''.join([letters[0], numbers[0], letters[1], numbers[1]])
+
+    def change_order_status(self, order_id, new_status):
+        new_status = OrderStatus[new_status]
+        self.connection.query(OrderModel).filter_by(id=order_id).update({"status": new_status})
+        self.connection.commit()
+
+    def get_order_by_id(self, order_id):
+        return self.connection.query(OrderModel).filter_by(id=order_id).first()

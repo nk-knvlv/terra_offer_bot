@@ -1,4 +1,5 @@
 from telegram import InlineKeyboardMarkup
+from telegram.error import TimedOut
 
 from views.view import View
 
@@ -21,4 +22,11 @@ class HelpView(View):
         footer = self.get_footer(update, context)
         keyboard.append(footer)
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.message.reply_text(help_view, reply_markup=reply_markup)
+        try:
+            await update.message.reply_text(help_view, reply_markup=reply_markup)
+        except TimedOut:
+            print("Время ожидания соединения истекло.")
+            # Обработка специфической ошибки
+        except Exception as e:
+            print(f"Произошла ошибка: {e}")
+            # Общая обработка ошибок

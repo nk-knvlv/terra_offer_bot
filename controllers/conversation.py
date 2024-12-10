@@ -50,7 +50,9 @@ class ConversationController:
         pattern = r'^(?:\+7\d{10}|8\d{10})$'
         if bool(re.match(pattern, user_phone)):
             context.user_data['phone'] = user_phone  # Сохраняем номер телефона
-            await update.message.reply_text(f"Ваш номер телефона: {user_phone}. Теперь, введите ваш адрес:")
+            await update.message.reply_text(
+                f"Ваш номер телефона: {user_phone}."
+                f" Теперь, введите ваш адрес (дом, подъезд, этаж и квартиру):")
             return self.ADDRESS
         else:
             await update.message.reply_text(
@@ -73,7 +75,7 @@ class ConversationController:
         for cart_product in user_cart_products:
             dict_cart_products[cart_product.product.name] = cart_product.quantity
 
-        self.order_controller.add(
+        order = await self.order_controller.add(
             user=user,
             phone=context.user_data['phone'],
             address=context.user_data['address'],
@@ -86,7 +88,7 @@ class ConversationController:
         user_orders_button = InlineKeyboardButton('🛍️ Мои заказы', callback_data='button_orders')
         # Отправляем сообщение о проверке заказа
         await update.message.reply_text(
-            "Ваш заказ проходит проверку. Вы можете вернуться в меню.",
+            f"Ваш заказ {order.label} проходит проверку. Ожидайте уведомления о подтверждении.",
             reply_markup=InlineKeyboardMarkup(
                 [
                     [
@@ -99,14 +101,16 @@ class ConversationController:
         )
 
         order_details = {
+            'id': order.id,
             'username': user.name,
-            'phone': context.user_data['phone'],
-            'address': context.user_data['address'],
-            'comment': user_comment,
+            'phone': order.phone,
+            'address': order.address,
+            'comment': order.comment,
+            'label': order.label,
             'json_products': json.dumps(dict_cart_products)
         }
         self.cart_controller.clear(user.id)
-        await self.admin_controller.send_new_order_notice(order_details, context=context)
+        await self.admin_controller.send_admin_new_order_notice(order_details, context=context)
 
         return ConversationHandler.END
 
@@ -116,7 +120,7 @@ class ConversationController:
             await query.answer()
             if 'confirm_order' in query.data:
                 await update.callback_query.edit_message_text(
-                    text="Добро пожаловать в службу доставки! Для начала введите свой номер телефона:"
+                    text="Укажите ваш номер телефона в формате +7 или 89:"
                 )
                 return self.PHONE
         else:

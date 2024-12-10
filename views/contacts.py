@@ -13,7 +13,7 @@ class ContactsView(View):
         contacts_view = (
             "Будем рады помочь:\n"
             "Наш рабочий номер +79637707161\n"
-            f"Администрация - {admin_username}"
+            f"Поддержка - {admin_username}"
         )
         footer = self.get_footer(update, context)
         keyboard.append(footer)

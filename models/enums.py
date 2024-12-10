@@ -2,10 +2,9 @@ from enum import Enum
 
 
 class OrderStatus(Enum):
-    PROCESSING = "В обработке"  # Заказ отправлен и находится в обработке
-    PREPARING = "Готовится"  # Заказ готовится
-    DELIVERY = "В доставке"  # Заказ доставляется
-    COMPLETED = "Завершен"  # Заказ завершен
+    PROCESSING = "На подтверждении"  # Заказ отправлен и находится в обработке
+    CONFIRMED = "Подтвержден"  # Заказ готовится
+    CANCELLED = "Отменен"  # Заказ готовится
 
 
 class OrderFieldsLang(Enum):
