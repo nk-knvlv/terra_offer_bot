@@ -6,8 +6,8 @@ from views.view import View
 
 class HelpView(View):
 
-    def __init__(self):
-        pass
+    def __init__(self, navigation_controller):
+        self.navigation_controller = navigation_controller
 
     async def show(self, update, context):
         keyboard = []
@@ -19,7 +19,7 @@ class HelpView(View):
             "/cart - Показать содержимое вашей корзины\n"
             "Просто отправьте название товара, чтобы добавить его в корзину."
         )
-        footer = self.get_footer(update, context)
+        footer = self.get_footer(self.navigation_controller.navigation)
         keyboard.append(footer)
         reply_markup = InlineKeyboardMarkup(keyboard)
         try:

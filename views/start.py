@@ -21,8 +21,8 @@ class StartView(View):
             user = query.from_user
         if self.admin_controller.is_admin(user.id):
             message = 'Администрирование.'
-            settings_button = InlineKeyboardButton("Настройки", callback_data='button_settings')
-            orders_button = InlineKeyboardButton("Заказы", callback_data='button_orders')
+            settings_button = InlineKeyboardButton("Настройки", callback_data='settings')
+            orders_button = InlineKeyboardButton("Заказы", callback_data='orders')
 
             keyboard = [
                 [settings_button],
@@ -34,9 +34,9 @@ class StartView(View):
 
             restaurant_link = 'https://yandex.ru/maps/org/terra/135054299656/?ll=37.510259%2C55.743335&z=16'
             link_button = InlineKeyboardButton("Наш ресторан", url=restaurant_link)
-            menu_button = InlineKeyboardButton("📜 Меню", callback_data='button_menu')
-            order_button = InlineKeyboardButton("🛍️ Мои заказы", callback_data='button_orders')
-            contacts_button = InlineKeyboardButton("📞 Контакты", callback_data='button_contacts')
+            menu_button = InlineKeyboardButton("📜 Меню", callback_data='menu')
+            order_button = InlineKeyboardButton("🛍️ Мои заказы", callback_data='orders')
+            contacts_button = InlineKeyboardButton("📞 Контакты", callback_data='contacts')
 
             keyboard = [
                 [link_button],

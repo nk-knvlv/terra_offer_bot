@@ -6,6 +6,7 @@ from models.product import ProductModel
 from models.cart_product import CartProductModel
 from models.order import OrderModel
 from dotenv import load_dotenv
+from transliterate import translit
 import os
 
 from src.lang.ru import menu, food_category_names, drink_category_names
@@ -94,7 +95,10 @@ class DB:
                             cat for cat in [*categories_food, *categories_drinks]
                             if category_name in cat.name),
                         description=product_fields['description'],
-                        photo_path='src/images/pizza_pepperoni.jpg')
+                        photo_path=f"src/images/{translit(
+                            product_name.lower(),
+                            'ru',
+                            reversed=True).replace('\'', '').replace(' ', '_')}.jpg")
                     product_models.append(product_model)
 
             # Сохранение продуктов в базу данных
@@ -116,3 +120,7 @@ class DB:
     #     product_pepperoni_pizza = ProductModel(name="Пицца Пепперони", price=800, category=category_pizza)
     #
     #     # session.commit()
+    def test(self):
+        products = self.connection.query(ProductModel).all()
+        for product in products:
+            print(f'{product.photo_path} - {product.category.name}')

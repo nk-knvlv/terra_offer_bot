@@ -29,7 +29,7 @@ class CartController:
             cart_products_count_str = f' ({cart_products_count})'
         cart_button = InlineKeyboardButton(
             text=f'🛒{cart_products_count_str}',
-            callback_data=f"button_cart"
+            callback_data=f"cart"
         )
         return cart_button
 

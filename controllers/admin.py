@@ -29,10 +29,10 @@ class AdminController:
                       )
         keyboard = []
         confirm_button = InlineKeyboardButton('✔️ Подтвердить',
-                                              callback_data=f'button_orders_confirm_{order_details['id']}')
-        cancel_button = InlineKeyboardButton('❌ Отменить', callback_data=f'button_orders_cancel_{order_details['id']}')
+                                              callback_data=f'orders_confirm_{order_details['id']}')
+        cancel_button = InlineKeyboardButton('❌ Отменить', callback_data=f'orders_cancel_{order_details['id']}')
         view_order_button = InlineKeyboardButton('📝 К заказу',
-                                                 callback_data=f'button_orders_view_{order_details['id']}')
+                                                 callback_data=f'orders_view_{order_details['id']}')
         keyboard.append([view_order_button, cancel_button, confirm_button])
 
         reply_markup = InlineKeyboardMarkup(inline_keyboard=keyboard)

@@ -10,10 +10,17 @@ from views.view import View
 
 
 class MenuView(View):
-    def __init__(self, product_controller: ProductController, cart_controller: CartController, category_controller):
+    def __init__(
+            self,
+            product_controller: ProductController,
+            cart_controller: CartController,
+            category_controller,
+            navigation_controller
+    ):
         self.product_controller = product_controller
         self.cart_controller = cart_controller
         self.category_controller = category_controller
+        self.navigation_controller = navigation_controller
 
     async def show(self, update, context):
         user = update.callback_query.from_user
@@ -24,7 +31,7 @@ class MenuView(View):
         else:
             parent_categories = self.category_controller.get_categories()
             category_view = self.get_category_buttons_view(categories=parent_categories)
-            footer = self.get_footer(update, context)
+            footer = self.get_footer(self.navigation_controller.navigation)
             cart_button = self.cart_controller.get_cart_button(user.id)
             footer.insert(1, cart_button)
             category_view.append(footer)
@@ -39,7 +46,7 @@ class MenuView(View):
         for category in categories:
             category_button = InlineKeyboardButton(
                 text=category.name,
-                callback_data=f"button_menu_category_{category.id}"  # Присоединяем id блюда к callback_data
+                callback_data=f"menu_category_{category.id}"  # Присоединяем id блюда к callback_data
             )
             button_row_list.append(category_button)
             counter += 1
@@ -66,7 +73,7 @@ class MenuView(View):
         message = f"{category_name}:\n"
         if len(keyboard) == 0:
             message = 'Скоро будут...'
-        footer = self.get_footer(update, context)
+        footer = self.get_footer(self.navigation_controller.navigation)
         cart_button = self.cart_controller.get_cart_button(user.id)
         footer.insert(1, cart_button)
         keyboard.append(footer)
@@ -80,7 +87,6 @@ class MenuView(View):
     def get_products_view(self, user, products):
         product_button_view = []
         for product in products:
-            cart_product = self.cart_controller.get_cart_product_by_id(user_id=user.id, product_id=product.id)
-            product_buttons = self.product_controller.get_product_buttons(product=product, cart_product=cart_product)
-            product_button_view.append([product_buttons[0],product_buttons[2]])
+            product_buttons = self.product_controller.get_product_buttons(product=product, user=user)
+            product_button_view.append([product_buttons[0], product_buttons[2]])
         return product_button_view

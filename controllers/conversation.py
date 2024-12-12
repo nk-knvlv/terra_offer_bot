@@ -83,9 +83,9 @@ class ConversationController:
             json_products=json.dumps(dict_cart_products)
         )
 
-        start_button = InlineKeyboardButton('🏠', callback_data='button_start')
-        menu_button = InlineKeyboardButton('📜 Меню', callback_data='button_menu')
-        user_orders_button = InlineKeyboardButton('🛍️ Мои заказы', callback_data='button_orders')
+        start_button = InlineKeyboardButton('🏠', callback_data='start')
+        menu_button = InlineKeyboardButton('📜 Меню', callback_data='menu')
+        user_orders_button = InlineKeyboardButton('🛍️ Мои заказы', callback_data='orders')
         # Отправляем сообщение о проверке заказа
         await update.message.reply_text(
             f"Ваш заказ {order.label} проходит проверку. Ожидайте уведомления о подтверждении.",

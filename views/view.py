@@ -6,22 +6,22 @@ class View:
     def get_back_button():
         return InlineKeyboardButton(
             text=f'⬅',
-            callback_data=f"button_back"
+            callback_data=f"back"
         )
 
     @staticmethod
     def get_start_button():
         return InlineKeyboardButton(
             text=f'🏠',
-            callback_data=f"button_start"
+            callback_data=f"start"
         )
 
-    def get_footer(self, update, context):
+    def get_footer(self, navigation):
         footer = []
-        if len(context.user_data['navigation']) > 0:
+        if len(navigation) > 0:
             back_button = self.get_back_button()
             footer.append(back_button)
-        if len(context.user_data['navigation']) > 1:
+        if len(navigation) > 1:
             start_button = self.get_start_button()
             footer.append(start_button)
         return footer

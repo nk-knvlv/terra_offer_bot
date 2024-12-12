@@ -4,8 +4,9 @@ from models.product import ProductModel
 
 
 class ProductController:
-    def __init__(self, product_model: ProductModel):
+    def __init__(self, product_model: ProductModel, cart_model):
         self.product_model = product_model
+        self.cart_model = cart_model
 
     def get_all(self):
         return self.product_model.get_all_products()
@@ -13,13 +14,13 @@ class ProductController:
     def get_products_by_category(self, category):
         return self.product_model.get_products_by_category(category)
 
-    def get_product_buttons(self, product, cart_product):
+    def get_product_buttons(self, product, user):
         product_name_button = InlineKeyboardButton(
             text=f"{product.name}\n{product.price:.0f} ₽",
-            callback_data=f"button_product_info_{product.id}"
+            callback_data=f"menu_category_{product.category_id}_product_info_{product.id}"
             # Присоединяем id блюда к callback_data
         )
-        increase_button = self.get_increase_button(product.id, cart_product=cart_product)
+        increase_button = self.get_increase_button(product.id, user_id=user.id)
         decrease_button = self.get_decrease_button(product.id)
         return [product_name_button, decrease_button, increase_button]
 
@@ -31,19 +32,18 @@ class ProductController:
         decrease_button_text = '➖'
         decrease_button = InlineKeyboardButton(
             text=decrease_button_text,
-            callback_data=f"button_product_decrease_{product_id}"  # Присоединяем id блюда к callback_data
+            callback_data=f"product_decrease_{product_id}"  # Присоединяем id блюда к callback_data
         )
         return decrease_button
 
-    @staticmethod
-    def get_increase_button(product_id, cart_product):
+    def get_increase_button(self, product_id, user_id):
         increase_button_text = '➕'
-
+        cart_product = self.cart_model.get_product_by_id(product_id=product_id, user_id=user_id)
         if cart_product and cart_product.quantity:
             increase_button_text += f' ({cart_product.quantity})'
         increase_button = InlineKeyboardButton(
             text=increase_button_text,
-            callback_data=f"button_product_increase_{product_id}"  # Присоединяем id блюда к callback_data
+            callback_data=f"product_increase_{product_id}"  # Присоединяем id блюда к callback_data
         )
         return increase_button
 
