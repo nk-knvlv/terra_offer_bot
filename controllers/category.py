@@ -1,3 +1,6 @@
+from telegram import InlineKeyboardButton
+
+
 class CategoryController:
     def __init__(self, category_model, product_model):
         self.category_model = category_model
@@ -21,3 +24,21 @@ class CategoryController:
             'categories': categories,
             'products': products
         }
+
+    @staticmethod
+    def get_category_keyboard(categories):
+        category_keyboard = []
+        button_row_list = []
+        counter = 0
+        for category in categories:
+            category_button = InlineKeyboardButton(
+                text=category.name,
+                callback_data=f"view-category_{category.id}"  # Присоединяем id блюда к callback_data
+            )
+            button_row_list.append(category_button)
+            counter += 1
+            if counter == 2:
+                category_keyboard.append(button_row_list)
+                counter = 0
+                button_row_list = []
+        return category_keyboard

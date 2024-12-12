@@ -10,7 +10,8 @@ class ProductView(View):
         self.product_controller = product_controller
         self.navigation_controller = navigation_controller
 
-    async def show(self, update, context, product_id):
+    async def show(self, update, context):
+        product_id = context.user_data['product_id']
         last_message = await update.callback_query.edit_message_text(
             text="Загрузка..."
         )
@@ -27,7 +28,7 @@ class ProductView(View):
                                          message_id=last_message.message_id)
         product_buttons = self.product_controller.get_product_buttons(product, user=user)
         keyboard.append([product_buttons[1], product_buttons[2]])
-        footer = self.get_footer(self.navigation_controller.navigation)
+        footer = self.get_footer(self.navigation_controller.get_navigation(context=context))
         keyboard.append(footer)
         reply_markup = InlineKeyboardMarkup(keyboard)
         message = (f"{product.name} - {product.price:.0f} ₽\n\n"

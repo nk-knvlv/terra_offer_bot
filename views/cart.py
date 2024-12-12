@@ -15,7 +15,7 @@ class CartView(View):
 
     async def show(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         menu_button = InlineKeyboardButton("📜 Меню", callback_data='menu')
-        confirm_button = InlineKeyboardButton("✔️ Подтвердить заказ", callback_data='conversation_confirm_order')
+        confirm_button = InlineKeyboardButton("✔️ Подтвердить заказ", callback_data='conversation-confirm-order')
         keyboard = [
         ]
 
@@ -40,7 +40,7 @@ class CartView(View):
             menu_button,
             confirm_button
         ])
-        footer = self.get_footer(self.navigation_controller.navigation)
+        footer = self.get_footer(self.navigation_controller.get_navigation(context=context))
         keyboard.append(footer)
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.callback_query.answer()  # Подтверждаем нажатие кнопки

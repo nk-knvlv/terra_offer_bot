@@ -1,18 +1,31 @@
 class NavigationController:
     def __init__(self):
-        self.navigation = ['start']
+        self.start_point = ['view-start']
 
-    def get_current_location(self):
-        return self.navigation[-1]
+    def init_navigation(self, context):
+        context.user_data['navigation'] = self.start_point
 
-    def get_current_route(self):
-        return self.navigation[-1]
+    @staticmethod
+    def get_navigation(context):
+        return context.user_data['navigation'] \
+            if 'navigation' in context.user_data else False
 
-    def back(self):
-        return self.navigation.pop()
+    @staticmethod
+    def get_current_location(context):
+        return context.user_data['navigation'][-1]
+
+    @staticmethod
+    def get_current_route(context):
+        return ''.join(context.user_data['navigation'])
+
+    @staticmethod
+    def back(context):
+        return context.user_data['navigation'].pop()
 
     def set_start(self):
-        self.navigation = ['start']
+        return self.start_point
 
-    def add_location(self, location):
-        self.navigation.append(location)
+    @staticmethod
+    def add_location(context, location):
+        if context.user_data['navigation'][-1] != location:
+            context.user_data['navigation'].append(location)

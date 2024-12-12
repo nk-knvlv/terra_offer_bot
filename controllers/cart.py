@@ -10,10 +10,12 @@ class CartController:
     def get_products(self, user_id):
         return self.cart_model.get_all(user_id)
 
-    async def add_product(self, product_id, user):
+    async def add_product(self, update, context, product_id):
+        user = update.callback_query.from_user
         self.cart_model.add_cart_product(product_id=product_id, user=user)
 
-    async def decrease_product(self, product_id, user):
+    async def decrease_product(self, update, context, product_id):
+        user = update.callback_query.from_user
         self.cart_model.decrease_cart_product(product_id=product_id, user=user)
 
     def get_cart_product_by_id(self, user_id, product_id):

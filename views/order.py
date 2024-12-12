@@ -46,7 +46,8 @@ class OrderView(View):
                       )
         return order_view
 
-    async def show(self, update: Update, context: ContextTypes.DEFAULT_TYPE, user):
+    async def show(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        user = update.callback_query.from_user
         orders = self.order_controller.get_all(user_id=user.id)
         keyboard = []
         # Формируем текст в виде таблицы с использованием HTML
@@ -57,7 +58,7 @@ class OrderView(View):
                 keyboard.append([order_buttons])
         else:
             orders_view = 'Заказов нет'
-        footer = self.get_footer(self.navigation_controller.navigation)
+        footer = self.get_footer(self.navigation_controller.get_navigation(context=context))
         keyboard.append(footer)
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.callback_query.answer()  # Подтверждаем нажатие кнопки
@@ -69,23 +70,23 @@ class OrderView(View):
         if self.admin_controller.is_admin(user.id):
             username = f" {user.name}"
         order_info = f"{order.label}{username} {order_date}"
-        view_order_button = InlineKeyboardButton(order_info, callback_data=f'orders_view_{order.id}')
+        view_order_button = InlineKeyboardButton(order_info, callback_data=f'orders-view-{order.id}')
         return view_order_button
 
     @staticmethod
     def get_order_confirmation_buttons(order):
-        confirm_button = InlineKeyboardButton('✔️ Подтвердить', callback_data=f'orders_confirm_{order.id}')
-        cancel_button = InlineKeyboardButton('❌ Отменить', callback_data=f'orders_cancel_{order.id}')
+        confirm_button = InlineKeyboardButton('✔️ Подтвердить', callback_data=f'orders-confirm-{order.id}')
+        cancel_button = InlineKeyboardButton('❌ Отменить', callback_data=f'orders-cancel-{order.id}')
         return [cancel_button, confirm_button]
 
-    async def show_order_info(self, update, context, order_id, user):
+    async def show_info(self, update, context, order_id, user):
         keyboard = []
         order = self.order_controller.get_order_by_id(order_id)
         order_view = self.get_order_view(order, user)
         if self.admin_controller.is_admin(user_id=user.id):
             order_confirmation_buttons = self.get_order_confirmation_buttons(order)
             keyboard.append(order_confirmation_buttons)
-        footer = self.get_footer(self.navigation_controller.navigation)
+        footer = self.get_footer(self.navigation_controller.get_navigation(context=context))
         keyboard.append(footer)
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.callback_query.answer()  # Подтверждаем нажатие кнопки

@@ -19,7 +19,7 @@ class HelpView(View):
             "/cart - Показать содержимое вашей корзины\n"
             "Просто отправьте название товара, чтобы добавить его в корзину."
         )
-        footer = self.get_footer(self.navigation_controller.navigation)
+        footer = self.get_footer(self.navigation_controller.get_navigation(context=context))
         keyboard.append(footer)
         reply_markup = InlineKeyboardMarkup(keyboard)
         try:

@@ -42,7 +42,7 @@ class OrderController:
                    'Скоро курьер отправится к вам. 🛵💨'
                    'Приятного аппетита! 🍽️✨')
         view_order_button = InlineKeyboardButton('📝 К заказу',
-                                                 callback_data=f'orders_view_{order_id}')
+                                                 callback_data=f'orders-view-{order_id}')
         keyboard.append([view_order_button])
         markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
 
@@ -68,7 +68,7 @@ class OrderController:
             " пожалуйста, позвоните нам по телефону: +79637707161."
             "Спасибо за ваше терпение!")
         view_order_button = InlineKeyboardButton('📝 К заказу',
-                                                 callback_data=f'orders_view_{order_id}')
+                                                 callback_data=f'orders-view-{order_id}')
         keyboard.append([view_order_button])
         markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
         await self.admin_controller.send_user_notification(

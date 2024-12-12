@@ -16,7 +16,7 @@ class ContactsView(View):
             "Наш рабочий номер +79637707161\n"
             f"Поддержка - {admin_username}"
         )
-        footer = self.get_footer(self.navigation_controller.navigation)
+        footer = self.get_footer(self.navigation_controller.get_navigation(context=context))
         keyboard.append(footer)
         reply_markup = InlineKeyboardMarkup(keyboard)
         await update.callback_query.answer()  # Подтверждаем нажатие кнопки

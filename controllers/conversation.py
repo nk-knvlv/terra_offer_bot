@@ -33,7 +33,7 @@ class ConversationController:
                 self.ADDRESS: [MessageHandler(filters.TEXT & ~filters.COMMAND, self.address_handler)],
                 self.COMMENT: [MessageHandler(filters.TEXT & ~filters.COMMAND, self.comment_handler)],
             },
-            fallbacks=[CallbackQueryHandler(self.callback_cancel_confirm_order, pattern='^conversation_cancel$')],
+            fallbacks=[CallbackQueryHandler(self.callback_cancel_confirm_order, pattern='^conversation_cancel$')]
         )
 
         return confirm_order_conversation

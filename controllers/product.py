@@ -17,7 +17,7 @@ class ProductController:
     def get_product_buttons(self, product, user):
         product_name_button = InlineKeyboardButton(
             text=f"{product.name}\n{product.price:.0f} ₽",
-            callback_data=f"menu_category_{product.category_id}_product_info_{product.id}"
+            callback_data=f"view-product_{product.id}"
             # Присоединяем id блюда к callback_data
         )
         increase_button = self.get_increase_button(product.id, user_id=user.id)
@@ -32,7 +32,7 @@ class ProductController:
         decrease_button_text = '➖'
         decrease_button = InlineKeyboardButton(
             text=decrease_button_text,
-            callback_data=f"product_decrease_{product_id}"  # Присоединяем id блюда к callback_data
+            callback_data=f"action-product-decrease-{product_id}"  # Присоединяем id блюда к callback_data
         )
         return decrease_button
 
@@ -43,7 +43,7 @@ class ProductController:
             increase_button_text += f' ({cart_product.quantity})'
         increase_button = InlineKeyboardButton(
             text=increase_button_text,
-            callback_data=f"product_increase_{product_id}"  # Присоединяем id блюда к callback_data
+            callback_data=f"product-increase-{product_id}"  # Присоединяем id блюда к callback_data
         )
         return increase_button
 
@@ -56,3 +56,10 @@ class ProductController:
                 del context.user_data['last_photo_message_id']  # Удаляем ID после удаления сообщения
             except Exception as e:
                 print("Не удалось удалить сообщение:", e)
+
+    def get_products_keyboard(self, user, products):
+        product_button_view = []
+        for product in products:
+            product_buttons = self.get_product_buttons(product=product, user=user)
+            product_button_view.append([product_buttons[0], product_buttons[2]])
+        return product_button_view
