@@ -1,5 +1,6 @@
 from telegram import InlineKeyboardMarkup
 from time import sleep
+import os
 
 from views.view import View
 
@@ -15,7 +16,7 @@ class ProductView(View):
         keyboard = []
         product = self.product_controller.get_product_by_id(product_id)
         await update.callback_query.answer()  # Обязательно отвечаем на запрос
-        if product.photo_path:
+        if product.photo_path and os.path.exists(product.photo_path):
             with open(product.photo_path, 'rb') as photo:
                 photo_message = await context.bot.send_photo(chat_id=update.effective_chat.id, photo=photo)
                 # Сохраняем ID фото сообщения, если потребуется для удаления
