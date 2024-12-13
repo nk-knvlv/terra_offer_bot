@@ -76,8 +76,8 @@ class OrderController:
             message=message,
             user_id=user_id,
             markup=markup)
-        self.order_model.change_order_status(order_id, 'CANCELLED')
 
+        self.order_model.change_order_status(order_id, 'CANCELLED')
 
 def get_order_by_id(self, order_id):
     return self.order_model.get_order_by_id(order_id=order_id)
