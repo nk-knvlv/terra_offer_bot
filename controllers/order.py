@@ -34,12 +34,12 @@ class OrderController:
         user_id = order.user_id
         order_label = order.label
         keyboard = []
-        message = '\n'.join[
+        message = '\n'.join([
             f'🔔 Уведомление о заказе',
-            f'Ваш заказ {order_label} уже подтвержден, и наша команда начала его готовить! 🍽️',
+            f'Ваш заказ {order_label} подтвержден!',
             'Скоро курьер отправится к вам. 🛵💨',
             'Приятного аппетита! 🍽️✨'
-        ]
+        ])
         view_order_button = InlineKeyboardButton('📝 К заказу',
                                                  callback_data=f'view-order-{order_id}')
         keyboard.append([view_order_button])
@@ -58,19 +58,19 @@ class OrderController:
         user_id = order.user_id
         order_label = order.label
         keyboard = []
-        message = (
-            f"🔔 Уведомление о заказе"
-            f"К сожалению, ваш заказ {order_label} был отменен."
-            f" Мы приносим свои извинения за неудобства и благодарим вас за понимание."
-            "В ближайшее время с вами свяжется наш сотрудник для уточнения деталей."
-            " Если вы не получили ответа в течение 24 часов,"
-            " пожалуйста, позвоните нам по телефону: +79637707161."
-            "Спасибо за ваше терпение!")
+        message = '\n'.join([
+            f"🔔 Уведомление о заказе",
+            f"К сожалению, ваш заказ {order_label} был отменен.",
+            f" Мы приносим свои извинения за неудобства.",
+            "В ближайшее время с вами свяжется наш сотрудник.",
+            "Если вы не получили ответа в течение 20 минут,",
+            "пожалуйста, позвоните нам по телефону: +79637707161."])
         view_order_button = InlineKeyboardButton('📝 К заказу',
                                                  callback_data=f'view-order-{order_id}')
         keyboard.append([view_order_button])
         markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
         await self.admin_controller.send_user_notification(
+
             update=update,
             context=context,
             message=message,
@@ -78,5 +78,6 @@ class OrderController:
             markup=markup)
         self.order_model.change_order_status(order_id, 'CANCELLED')
 
-    def get_order_by_id(self, order_id):
-        return self.order_model.get_order_by_id(order_id=order_id)
+
+def get_order_by_id(self, order_id):
+    return self.order_model.get_order_by_id(order_id=order_id)
