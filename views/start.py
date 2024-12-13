@@ -33,7 +33,7 @@ class StartView(View):
         if self.admin_controller.is_admin(user.id):
             message = 'Администрирование.'
             settings_button = InlineKeyboardButton("Настройки", callback_data='view-menu')
-            orders_button = InlineKeyboardButton("Заказы", callback_data='view-orders')
+            orders_button = InlineKeyboardButton("Заказы", callback_data='view-order')
 
             keyboard = [
                 [settings_button],
