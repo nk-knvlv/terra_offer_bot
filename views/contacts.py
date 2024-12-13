@@ -9,7 +9,7 @@ class ContactsView(View):
         self.navigation_controller = navigation_controller
 
     async def show(self, update, context):
-        admin_username = await self.admin_controller.get_admin_nickname(update, context)
+        admin_username = await self.admin_controller.get_admin_nickname(context=context)
         keyboard = []
         contacts_view = (
             "Будем рады помочь:\n"

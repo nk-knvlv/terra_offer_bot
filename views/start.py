@@ -3,7 +3,6 @@ from telegram import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
-from telegram.ext import ContextTypes
 from views.view import View
 
 
@@ -18,6 +17,20 @@ class StartView(View):
         if update.message:
             print(update.message.chat_id)
             user = update.message.from_user
+            chat_id = update.message.chat_id
+            # if 'message_history' not in context.user_data:
+            #     context.user_data['message_history'] = [update.message.message_id]
+            # else:
+            #     context.user_data['message_history'].append(update.message.message_id)
+            #     if len(message_ids := context.user_data['message_history']) > 0:
+            #         for message_id in message_ids[1:]:  # Убираем последний элемент
+            #             try:
+            #                 await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
+            #             except Exception as e:
+            #                 print(f"Error while deleting message {message_id}: {e}")
+            #         context.user_data['message_history'] = []
+            #     else:
+            #         context.user_data['message_history'].append(update.message.message_id)
         else:
             query = update.callback_query
             user = query.from_user
@@ -37,7 +50,7 @@ class StartView(View):
             restaurant_link = 'https://yandex.ru/maps/org/terra/135054299656/?ll=37.510259%2C55.743335&z=16'
             link_button = InlineKeyboardButton("Наш ресторан", url=restaurant_link)
             menu_button = InlineKeyboardButton("📜 Меню", callback_data='view-menu')
-            order_button = InlineKeyboardButton("🛍️ Мои заказы", callback_data='view-orders')
+            order_button = InlineKeyboardButton("🛍️ Мои заказы", callback_data='view-order')
             contacts_button = InlineKeyboardButton("📞 Контакты", callback_data='view-contacts')
 
             keyboard = [
@@ -49,12 +62,13 @@ class StartView(View):
 
         markup = InlineKeyboardMarkup(inline_keyboard=keyboard)
         if update.message:
-            await update.message.reply_text(
+            sent_message = await update.message.reply_text(
                 message,
                 reply_markup=markup
             )
         else:
-            await update.callback_query.edit_message_text(
+            sent_message = await update.callback_query.edit_message_text(
                 message,
                 reply_markup=markup
             )
+        # context.user_data['message_history'].append(sent_message.message_id)

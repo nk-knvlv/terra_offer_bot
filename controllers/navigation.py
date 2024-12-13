@@ -22,9 +22,6 @@ class NavigationController:
     def back(context):
         return context.user_data['navigation'].pop()
 
-    def set_start(self):
-        return self.start_point
-
     @staticmethod
     def add_location(context, location):
         if context.user_data['navigation'][-1] != location:

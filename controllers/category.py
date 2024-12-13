@@ -33,7 +33,7 @@ class CategoryController:
         for category in categories:
             category_button = InlineKeyboardButton(
                 text=category.name,
-                callback_data=f"view-category_{category.id}"  # Присоединяем id блюда к callback_data
+                callback_data=f"view-category-{category.id}"  # Присоединяем id блюда к callback_data
             )
             button_row_list.append(category_button)
             counter += 1

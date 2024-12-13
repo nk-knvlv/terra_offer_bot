@@ -1,8 +1,7 @@
 import string
 from random import choices
 
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, JSON, Enum as SQLAEnum, DateTime
-from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy import Column, Integer, String, JSON, Enum as SQLAEnum, DateTime
 from models.enums import OrderStatus
 from datetime import datetime
 from models.base import Base

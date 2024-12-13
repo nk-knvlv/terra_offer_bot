@@ -1,10 +1,8 @@
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker
 from models.base import Base
 from models.category import CategoryModel
 from models.product import ProductModel
-from models.cart_product import CartProductModel
-from models.order import OrderModel
 from dotenv import load_dotenv
 from transliterate import translit
 import os

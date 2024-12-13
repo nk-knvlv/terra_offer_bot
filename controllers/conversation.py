@@ -2,14 +2,12 @@ from telegram.ext import (
     ConversationHandler,
     MessageHandler,
     filters,
-    CallbackContext,
     CallbackQueryHandler
 )
 from telegram import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
-from models.order import OrderModel
 import json
 import re
 
@@ -17,10 +15,10 @@ import re
 class ConversationController:
     PHONE, ADDRESS, COMMENT = range(3)
 
-    def __init__(self, order_controller, admin_controller, cart_controller):
+    def __init__(self, order_controller, admin_controller, cart_product_controller):
         self.order_controller = order_controller
         self.admin_controller = admin_controller
-        self.cart_controller = cart_controller
+        self.cart_product_controller = cart_product_controller
 
     def get_confirm_order_conversation(self):
         # Шаги оформления заказа
@@ -70,7 +68,7 @@ class ConversationController:
         context.user_data['comment'] = user_comment  # Сохраняем комментарий
         # Здесь вы можете обрабатывать заказ
         user = update.message.from_user
-        user_cart_products = self.cart_controller.get_products(user_id=user.id)
+        user_cart_products = self.cart_product_controller.get_products(user_id=user.id)
         dict_cart_products = {}
         for cart_product in user_cart_products:
             dict_cart_products[cart_product.product.name] = cart_product.quantity
@@ -109,14 +107,14 @@ class ConversationController:
             'label': order.label,
             'json_products': json.dumps(dict_cart_products)
         }
-        self.cart_controller.clear(user.id)
+        self.cart_product_controller.clear(user.id)
         await self.admin_controller.send_admin_new_order_notice(order_details, context=context)
 
         return ConversationHandler.END
 
     async def start_confirm_order_conversation_handler(self, update, context):
         query = update.callback_query
-        if self.cart_controller.get_products(user_id=query.from_user.id):
+        if self.cart_product_controller.get_products(user_id=query.from_user.id):
             await query.answer()
             if 'confirm_order' in query.data:
                 await update.callback_query.edit_message_text(

@@ -8,8 +8,8 @@ from views.view import View
 
 
 class CartView(View):
-    def __init__(self, cart_controller, product_controller, navigation_controller):
-        self.cart_controller = cart_controller
+    def __init__(self, cart_product_controller, product_controller, navigation_controller):
+        self.cart_product_controller = cart_product_controller
         self.product_controller = product_controller
         self.navigation_controller = navigation_controller
 
@@ -21,7 +21,7 @@ class CartView(View):
 
         query = update.callback_query
         user = query.from_user
-        cart_products = self.cart_controller.get_products(user_id=user.id)
+        cart_products = self.cart_product_controller.get_products(user_id=user.id)
 
         if cart_products:
             total = 0

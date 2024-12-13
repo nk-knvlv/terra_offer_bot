@@ -11,7 +11,7 @@ class OrderView(View):
         self.order_controller = order_controller
         self.navigation_controller = navigation_controller
 
-    def get_order_view(self, order, user):
+    def get_order_info(self, order, user):
         order_label = order.label
         order_date = f"{order.date.month:02}/{order.date.day:02} {order.date.hour:02}:{order.date.minute:02}"
         status_info = f'\nCтатус: {OrderStatus(order.status).value}'
@@ -47,47 +47,44 @@ class OrderView(View):
         return order_view
 
     async def show(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        user = update.callback_query.from_user
-        orders = self.order_controller.get_all(user_id=user.id)
         keyboard = []
-        # Формируем текст в виде таблицы с использованием HTML
-        if orders:
-            orders_view = f'{'Заказы'}'
-            for order in orders:  # Пропускаем заголовок
-                order_buttons = self.get_order_view_button(order, user)
-                keyboard.append([order_buttons])
+        user = update.callback_query.from_user
+        if 'order_id' in context.user_data and context.user_data['order_id']:
+            order_id = context.user_data['order_id']
+            order = self.order_controller.get_order_by_id(order_id)
+            order_info = self.get_order_info(order, user)
+
+            if self.admin_controller.is_admin(user_id=user.id):
+                order_confirmation_buttons = self.get_order_confirmation_buttons(order)
+                keyboard.append(order_confirmation_buttons)
         else:
-            orders_view = 'Заказов нет'
+            orders = self.order_controller.get_all(user_id=user.id)
+            if orders:
+                order_info = f'{'Заказы'}'
+                for order in orders:
+                    order_buttons = self.get_order_info_button(order, user)
+                    keyboard.append([order_buttons])
+            else:
+                order_info = 'Заказов нет'
+
         footer = self.get_footer(self.navigation_controller.get_navigation(context=context))
         keyboard.append(footer)
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.callback_query.answer()  # Подтверждаем нажатие кнопки
-        await update.callback_query.edit_message_text(orders_view, reply_markup=reply_markup)
 
-    def get_order_view_button(self, order, user):
+        await update.callback_query.answer()  # Подтверждаем нажатие кнопки
+        await update.callback_query.edit_message_text(order_info, reply_markup=reply_markup)
+
+    def get_order_info_button(self, order, user):
         order_date = f"{order.date.month:02}/{order.date.day:02} {order.date.hour:02}:{order.date.minute:02}"
         username = ''
         if self.admin_controller.is_admin(user.id):
             username = f" {user.name}"
         order_info = f"{order.label}{username} {order_date}"
-        view_order_button = InlineKeyboardButton(order_info, callback_data=f'orders-view-{order.id}')
+        view_order_button = InlineKeyboardButton(order_info, callback_data=f'view-order-{order.id}')
         return view_order_button
 
     @staticmethod
     def get_order_confirmation_buttons(order):
-        confirm_button = InlineKeyboardButton('✔️ Подтвердить', callback_data=f'orders-confirm-{order.id}')
-        cancel_button = InlineKeyboardButton('❌ Отменить', callback_data=f'orders-cancel-{order.id}')
+        confirm_button = InlineKeyboardButton('✔️ Подтвердить', callback_data=f'action-order-confirm-{order.id}')
+        cancel_button = InlineKeyboardButton('❌ Отменить', callback_data=f'action-order-cancel-{order.id}')
         return [cancel_button, confirm_button]
-
-    async def show_info(self, update, context, order_id, user):
-        keyboard = []
-        order = self.order_controller.get_order_by_id(order_id)
-        order_view = self.get_order_view(order, user)
-        if self.admin_controller.is_admin(user_id=user.id):
-            order_confirmation_buttons = self.get_order_confirmation_buttons(order)
-            keyboard.append(order_confirmation_buttons)
-        footer = self.get_footer(self.navigation_controller.get_navigation(context=context))
-        keyboard.append(footer)
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        await update.callback_query.answer()  # Подтверждаем нажатие кнопки
-        await update.callback_query.edit_message_text(order_view, reply_markup=reply_markup)

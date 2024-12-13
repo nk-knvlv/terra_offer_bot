@@ -1,14 +1,14 @@
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import InlineKeyboardMarkup
 from telegram.error import BadRequest
 
 from views.view import View
 
 
 class CategoryView(View):
-    def __init__(self, category_controller, navigation_controller, cart_controller, product_controller):
+    def __init__(self, category_controller, navigation_controller, cart_product_controller, product_controller):
         self.category_controller = category_controller
         self.navigation_controller = navigation_controller
-        self.cart_controller = cart_controller
+        self.cart_product_controller = cart_product_controller
         self.product_controller = product_controller
 
     async def show(self, update, context):
@@ -30,7 +30,7 @@ class CategoryView(View):
         if len(keyboard) == 0:
             message = 'Скоро будут...'
         footer = self.get_footer(self.navigation_controller.get_navigation(context=context))
-        cart_button = self.cart_controller.get_cart_button(user.id)
+        cart_button = self.cart_product_controller.get_cart_button(user.id)
         footer.insert(1, cart_button)
         keyboard.append(footer)
         reply_markup = InlineKeyboardMarkup(keyboard)

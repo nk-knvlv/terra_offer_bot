@@ -13,7 +13,7 @@ class View:
     def get_start_button():
         return InlineKeyboardButton(
             text=f'🏠',
-            callback_data=f"start"
+            callback_data=f"view-start"
         )
 
     def get_footer(self, navigation):

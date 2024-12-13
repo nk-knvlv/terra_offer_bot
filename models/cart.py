@@ -1,5 +1,3 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, JSON, Enum as SQLAEnum, DateTime
-from sqlalchemy.orm import relationship, declarative_base
 from models.cart_product import CartProductModel
 
 

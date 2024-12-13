@@ -17,12 +17,12 @@ class ProductController:
     def get_product_buttons(self, product, user):
         product_name_button = InlineKeyboardButton(
             text=f"{product.name}\n{product.price:.0f} ₽",
-            callback_data=f"view-product_{product.id}"
+            callback_data=f"view-product-{product.id}"
             # Присоединяем id блюда к callback_data
         )
-        increase_button = self.get_increase_button(product.id, user_id=user.id)
+        add_button = self.get_add_button(product.id, user_id=user.id)
         decrease_button = self.get_decrease_button(product.id)
-        return [product_name_button, decrease_button, increase_button]
+        return [product_name_button, decrease_button, add_button]
 
     def get_product_by_id(self, product_id):
         return self.product_model.get_product_by_id(product_id)
@@ -32,20 +32,20 @@ class ProductController:
         decrease_button_text = '➖'
         decrease_button = InlineKeyboardButton(
             text=decrease_button_text,
-            callback_data=f"action-product-decrease-{product_id}"  # Присоединяем id блюда к callback_data
+            callback_data=f"action-cart_product-decrease-{product_id}"  # Присоединяем id блюда к callback_data
         )
         return decrease_button
 
-    def get_increase_button(self, product_id, user_id):
-        increase_button_text = '➕'
+    def get_add_button(self, product_id, user_id):
+        add_button_text = '➕'
         cart_product = self.cart_model.get_product_by_id(product_id=product_id, user_id=user_id)
         if cart_product and cart_product.quantity:
-            increase_button_text += f' ({cart_product.quantity})'
-        increase_button = InlineKeyboardButton(
-            text=increase_button_text,
-            callback_data=f"product-increase-{product_id}"  # Присоединяем id блюда к callback_data
+            add_button_text += f' ({cart_product.quantity})'
+        add_button = InlineKeyboardButton(
+            text=add_button_text,
+            callback_data=f"action-cart_product-add-{product_id}"  # Присоединяем id блюда к callback_data
         )
-        return increase_button
+        return add_button
 
     @staticmethod
     async def del_photo(update, context):

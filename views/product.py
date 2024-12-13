@@ -1,5 +1,4 @@
 from telegram import InlineKeyboardMarkup
-from time import sleep
 import os
 
 from views.view import View

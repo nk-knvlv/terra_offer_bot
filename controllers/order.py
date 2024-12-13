@@ -1,9 +1,6 @@
-from datetime import datetime
-
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 
 from models.order import OrderModel
-from models.enums import OrderStatus
 
 
 class OrderController:
@@ -32,7 +29,7 @@ class OrderController:
     def get_user_orders(self, user_id):
         return self.order_model.get_user_orders(user_id=user_id)
 
-    async def confirm_order(self, update, context, order_id):
+    async def confirm(self, update, context, order_id):
         order = self.order_model.get_order_by_id(order_id)
         user_id = order.user_id
         order_label = order.label
@@ -54,7 +51,7 @@ class OrderController:
             markup=markup)
         self.order_model.change_order_status(order_id, 'CONFIRMED')
 
-    async def cancel_order(self, update, context, order_id):
+    async def cancel(self, update, context, order_id):
         order = self.order_model.get_order_by_id(order_id)
         user_id = order.user_id
         order_label = order.label

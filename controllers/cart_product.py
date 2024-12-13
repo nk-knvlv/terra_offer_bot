@@ -2,7 +2,7 @@ from models.cart import CartModel
 from telegram import InlineKeyboardButton
 
 
-class CartController:
+class CartProductController:
     def __init__(self, cart_model: CartModel, product_model):
         self.product_model = product_model
         self.cart_model = cart_model
@@ -10,11 +10,11 @@ class CartController:
     def get_products(self, user_id):
         return self.cart_model.get_all(user_id)
 
-    async def add_product(self, update, context, product_id):
+    async def add(self, update, context, product_id):
         user = update.callback_query.from_user
         self.cart_model.add_cart_product(product_id=product_id, user=user)
 
-    async def decrease_product(self, update, context, product_id):
+    async def decrease(self, update, context, product_id):
         user = update.callback_query.from_user
         self.cart_model.decrease_cart_product(product_id=product_id, user=user)
 
@@ -31,7 +31,7 @@ class CartController:
             cart_products_count_str = f' ({cart_products_count})'
         cart_button = InlineKeyboardButton(
             text=f'🛒{cart_products_count_str}',
-            callback_data=f"cart"
+            callback_data=f"view-cart"
         )
         return cart_button
 
