@@ -14,7 +14,7 @@ class CartView(View):
         self.navigation_controller = navigation_controller
 
     async def show(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        menu_button = InlineKeyboardButton("📜 Меню", callback_data='menu')
+        menu_button = InlineKeyboardButton("📜 Меню", callback_data='view-menu')
         confirm_button = InlineKeyboardButton("✔️ Подтвердить заказ", callback_data='conversation-confirm-order')
         keyboard = [
         ]

@@ -2,9 +2,6 @@ class NavigationController:
     def __init__(self):
         self.start_point = ['view-start']
 
-    def init_navigation(self, context):
-        context.user_data['navigation'] = self.start_point
-
     @staticmethod
     def get_navigation(context):
         return context.user_data['navigation'] \
@@ -24,5 +21,5 @@ class NavigationController:
 
     @staticmethod
     def add_location(context, location):
-        if context.user_data['navigation'][-1] != location:
+        if len(context.user_data['navigation']) == 0 or context.user_data['navigation'][-1] != location:
             context.user_data['navigation'].append(location)

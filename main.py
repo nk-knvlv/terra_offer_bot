@@ -46,15 +46,15 @@ class Bot:
 
     async def route_handler(self, update: Update, context: CallbackContext):
         route = update.callback_query.data
-        if not self.controllers['navigation'].get_navigation(context=context):
-            self.controllers['navigation'].init_navigation(context=context)
+        if 'navigation' not in context.user_data:
+            context.user_data['navigation'] = []
         print(self.controllers['navigation'].get_navigation(context=context))
         print(f"{route}\n")
         await update.callback_query.answer()  # Обязательно отвечаем на запрос
 
         if route == 'back':
             await self.controllers['product'].del_photo(update, context)
-            self.controllers['navigation'].back(context=context)
+            context.user_data['navigation'].pop()
             route = self.controllers['navigation'].get_current_location(context=context)
 
         if 'action' in route:
@@ -64,6 +64,7 @@ class Bot:
             route = self.controllers['navigation'].get_current_location(context=context)
 
         if 'view' in route:
+            self.controllers['navigation'].add_location(context=context, location=route)
             route_path = route.split('-')
             location = route_path[1]
             if len(route_path) > 2:
@@ -71,10 +72,6 @@ class Bot:
             # TODO при показе продукта при нажатии на start должно было удаляться
             await self.controllers['product'].del_photo(update, context)
             await self.views[location].show(update=update, context=context)
-            self.controllers['navigation'].add_location(context=context, location=route)
-
-
-
 
     def main(self):
         db = DB()

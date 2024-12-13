@@ -12,31 +12,27 @@ class StartView(View):
         self.navigation_controller = navigation_controller
 
     async def show(self, update: Update, context):
-        self.navigation_controller.init_navigation(context)
-
+        context.user_data['navigation'] = ['view-start']
+        if 'message_history' not in context.user_data:
+            context.user_data['message_history'] = []
         if update.message:
             print(update.message.chat_id)
             user = update.message.from_user
             chat_id = update.message.chat_id
-            # if 'message_history' not in context.user_data:
-            #     context.user_data['message_history'] = [update.message.message_id]
-            # else:
-            #     context.user_data['message_history'].append(update.message.message_id)
-            #     if len(message_ids := context.user_data['message_history']) > 0:
-            #         for message_id in message_ids[1:]:  # Убираем последний элемент
-            #             try:
-            #                 await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
-            #             except Exception as e:
-            #                 print(f"Error while deleting message {message_id}: {e}")
-            #         context.user_data['message_history'] = []
-            #     else:
-            #         context.user_data['message_history'].append(update.message.message_id)
+            context.user_data['message_history'].append(update.message.message_id)
+            # Если в истории больше одного сообщения, удаляем их
+            while len(context.user_data['message_history']) > 1:
+                message_id_to_delete = context.user_data['message_history'].pop()  # Убираем старое сообщение
+                try:
+                    await context.bot.delete_message(chat_id=chat_id, message_id=message_id_to_delete)
+                except Exception as e:
+                    print(f"Error while deleting message {message_id_to_delete}: {e}")
         else:
             query = update.callback_query
             user = query.from_user
         if self.admin_controller.is_admin(user.id):
             message = 'Администрирование.'
-            settings_button = InlineKeyboardButton("Настройки", callback_data='view-settings')
+            settings_button = InlineKeyboardButton("Настройки", callback_data='view-menu')
             orders_button = InlineKeyboardButton("Заказы", callback_data='view-orders')
 
             keyboard = [
@@ -71,4 +67,4 @@ class StartView(View):
                 message,
                 reply_markup=markup
             )
-        # context.user_data['message_history'].append(sent_message.message_id)
+        context.user_data['message_history'].append(sent_message.message_id)

@@ -31,7 +31,7 @@ class ConversationController:
                 self.ADDRESS: [MessageHandler(filters.TEXT & ~filters.COMMAND, self.address_handler)],
                 self.COMMENT: [MessageHandler(filters.TEXT & ~filters.COMMAND, self.comment_handler)],
             },
-            fallbacks=[CallbackQueryHandler(self.callback_cancel_confirm_order, pattern='^conversation_cancel$')]
+            fallbacks=[CallbackQueryHandler(self.callback_cancel_confirm_order, pattern='^conversation-cancel$')]
         )
 
         return confirm_order_conversation
@@ -48,19 +48,23 @@ class ConversationController:
         pattern = r'^(?:\+7\d{10}|8\d{10})$'
         if bool(re.match(pattern, user_phone)):
             context.user_data['phone'] = user_phone  # Сохраняем номер телефона
-            await update.message.reply_text(
+            sent_message = await update.message.reply_text(
                 f"Ваш номер телефона: {user_phone}."
                 f" Теперь, введите ваш адрес (дом, подъезд, этаж и квартиру):")
+            context.user_data['message_history'].append(sent_message.message_id)
             return self.ADDRESS
         else:
-            await update.message.reply_text(
+            sent_message = await update.message.reply_text(
                 f"Не действительный номер: {user_phone}. Попробуйте еще раз в формате +7XXXXXXXXXX/89XXXXXXXXXX:")
+            context.user_data['message_history'].append(sent_message.message_id)
+
             return self.PHONE
 
     async def address_handler(self, update, context):
         user_address = update.message.text
         context.user_data['address'] = user_address  # Сохраняем адрес
-        await update.message.reply_text(f"Ваш адрес: {user_address}. Пожалуйста, введите комментарий к заказу:")
+        sent_message = await update.message.reply_text(f"Ваш адрес: {user_address}. Пожалуйста, введите комментарий к заказу:")
+        context.user_data['message_history'].append(sent_message.message_id)
         return self.COMMENT
 
     async def comment_handler(self, update, context):
@@ -81,11 +85,11 @@ class ConversationController:
             json_products=json.dumps(dict_cart_products)
         )
 
-        start_button = InlineKeyboardButton('🏠', callback_data='start')
-        menu_button = InlineKeyboardButton('📜 Меню', callback_data='menu')
-        user_orders_button = InlineKeyboardButton('🛍️ Мои заказы', callback_data='orders')
+        start_button = InlineKeyboardButton('🏠', callback_data='view-start')
+        menu_button = InlineKeyboardButton('📜 Меню', callback_data='view-menu')
+        user_orders_button = InlineKeyboardButton('🛍️ Мои заказы', callback_data='view-order')
         # Отправляем сообщение о проверке заказа
-        await update.message.reply_text(
+        sent_message = await update.message.reply_text(
             f"Ваш заказ {order.label} проходит проверку. Ожидайте уведомления о подтверждении.",
             reply_markup=InlineKeyboardMarkup(
                 [
@@ -97,6 +101,8 @@ class ConversationController:
                 ],
             )
         )
+        
+        context.user_data['message_history'].append(sent_message.message_id)
 
         order_details = {
             'id': order.id,
@@ -116,11 +122,13 @@ class ConversationController:
         query = update.callback_query
         if self.cart_product_controller.get_products(user_id=query.from_user.id):
             await query.answer()
-            if 'confirm_order' in query.data:
-                await update.callback_query.edit_message_text(
+            if 'confirm-order' in query.data:
+                sent_message = await update.callback_query.edit_message_text(
                     text="Укажите ваш номер телефона в формате +7 или 89:"
                 )
+                context.user_data['message_history'].append(sent_message.message_id)
                 return self.PHONE
         else:
             await query.answer()
             pass
+ 
