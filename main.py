@@ -76,7 +76,7 @@ class Bot:
     def main(self):
         db = DB()
         # db.prepare() # создает таблицы бд
-        db.test() # выводит на печать пути фотографий продуктов
+        # db.test()  # выводит на печать пути фотографий продуктов
         bot = Application.builder().token(self.TELEGRAM_TOKEN).build()
 
         # models
