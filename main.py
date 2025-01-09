@@ -100,7 +100,7 @@ class Bot:
         help_view = HelpView(navigation_controller=navigation_controller)
         menu_view = MenuView(product_controller=product_controller, cart_product_controller=cart_product_controller,
                              category_controller=category_controller, navigation_controller=navigation_controller)
-        order_view = OrderView(admin_controller=admin_controller, order_controller=order_controller,
+        order_view = OrderView(admin_controller=admin_controller, order_model=order_model,
                                navigation_controller=navigation_controller)
         cart_view = CartView(cart_product_controller, product_controller, navigation_controller=navigation_controller)
         contacts_view = ContactsView(admin_controller=admin_controller, navigation_controller=navigation_controller)

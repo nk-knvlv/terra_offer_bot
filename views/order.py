@@ -6,9 +6,9 @@ from views.view import View
 
 
 class OrderView(View):
-    def __init__(self, order_controller, admin_controller, navigation_controller):
+    def __init__(self, order_model, admin_controller, navigation_controller):
         self.admin_controller = admin_controller
-        self.order_controller = order_controller
+        self.order_model = order_model
         self.navigation_controller = navigation_controller
 
     def get_order_info(self, order, user):
@@ -51,14 +51,14 @@ class OrderView(View):
         user = update.callback_query.from_user
         if 'order_id' in context.user_data and context.user_data['order_id']:
             order_id = context.user_data['order_id']
-            order = self.order_controller.get_order_by_id(order_id)
+            order = self.order_model.get_order_by_id(order_id)
             order_info = self.get_order_info(order, user)
 
             if self.admin_controller.is_admin(user_id=user.id):
                 order_confirmation_buttons = self.get_order_confirmation_buttons(order)
                 keyboard.append(order_confirmation_buttons)
         else:
-            orders = self.order_controller.get_all(user_id=user.id)
+            orders = self.order_model.get_all()
             if orders:
                 order_info = f'{'Заказы'}'
                 for order in orders:
