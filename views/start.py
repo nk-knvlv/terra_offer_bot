@@ -7,14 +7,21 @@ from views.view import View
 
 
 class StartView(View):
-    def __init__(self, admin_controller, navigation_controller):
+    def __init__(self, admin_controller, navigation_controller, product_controller):
         self.admin_controller = admin_controller
         self.navigation_controller = navigation_controller
+        self.product_controller = product_controller
 
     async def show(self, update: Update, context):
         context.user_data['navigation'] = ['view-start']
         if 'message_history' not in context.user_data:
             context.user_data['message_history'] = []
+
+        if 'order_id' in context.user_data:
+            del context.user_data['order_id']  # Удаляем ID после удаления сообщения
+
+        await self.product_controller.del_photo(update, context)
+
         if update.message:
             print(update.message.chat_id)
             user = update.message.from_user

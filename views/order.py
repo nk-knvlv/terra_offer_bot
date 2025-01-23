@@ -49,7 +49,7 @@ class OrderView(View):
     async def show(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = []
         user = update.callback_query.from_user
-        if 'order_id' in context.user_data and context.user_data['order_id']:
+        if 'order_id' in context.user_data:
             order_id = context.user_data['order_id']
             order = self.order_model.get_order_by_id(order_id)
             order_info = self.get_order_info(order, user)

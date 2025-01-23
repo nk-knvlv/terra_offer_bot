@@ -54,6 +54,9 @@ class Bot:
 
         if route == 'back':
             await self.controllers['product'].del_photo(update, context)
+            if 'order_id' in context.user_data:
+                del context.user_data['order_id']  # Удаляем ID после удаления сообщения
+
             context.user_data['navigation'].pop()
             route = self.controllers['navigation'].get_current_location(context=context)
 
@@ -70,12 +73,11 @@ class Bot:
             if len(route_path) > 2:
                 context.user_data[f"{location}_id"] = route_path[2]
             # TODO при показе продукта при нажатии на start должно было удаляться
-            await self.controllers['product'].del_photo(update, context)
             await self.views[location].show(update=update, context=context)
 
     def main(self):
         db = DB()
-        # db.prepare() # создает таблицы бд
+        db.prepare()  # создает таблицы бд
         # db.test()  # выводит на печать пути фотографий продуктов
         bot = Application.builder().token(self.TELEGRAM_TOKEN).build()
 
@@ -96,7 +98,8 @@ class Bot:
         category_controller = CategoryController(category_model=category_model, product_model=product_model)
 
         # views
-        start_view = StartView(admin_controller=admin_controller, navigation_controller=navigation_controller)
+        start_view = StartView(admin_controller=admin_controller, navigation_controller=navigation_controller,
+                               product_controller=product_controller)
         help_view = HelpView(navigation_controller=navigation_controller)
         menu_view = MenuView(product_controller=product_controller, cart_product_controller=cart_product_controller,
                              category_controller=category_controller, navigation_controller=navigation_controller)

@@ -49,7 +49,7 @@ class DB:
         if not connection.query(ProductModel).first():
             # Создание родительских категорий
             # Создание родительских категорий
-            parent_category_food = CategoryModel(name="🍞 Еда")
+            parent_category_food = CategoryModel(name="🍝 Еда")
             parent_category_drinks = CategoryModel(name="🍷 Напитки")
 
             # Сохранение родительских категорий в базу данных
@@ -57,7 +57,7 @@ class DB:
             self.connection.commit()  # Теперь у родительских категорий будут id
 
             # Запрос родительских категорий из базы данных
-            parent_category_food = self.connection.query(CategoryModel).filter_by(name="🍞 Еда").first()
+            parent_category_food = self.connection.query(CategoryModel).filter_by(name="🍝 Еда").first()
             parent_category_drinks = self.connection.query(CategoryModel).filter_by(name="🍷 Напитки").first()
 
             food_categories = []
